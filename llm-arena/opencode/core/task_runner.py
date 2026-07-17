@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
-from .agent import OpenCodeAgent, AgentResult
+from .agent import AgentResult, AgentStatus, OpenCodeAgent
 from .container_runner import ContainerConfig, ContainerRunner
 
 
@@ -139,14 +139,22 @@ class TaskRunner:
             "details": [],
         }
 
-        # Run tests
-        test_path = Path(workspace_path) / "tests"
-        if test_path.exists():
-            import subprocess
+        # Run tests: prefer tests/ dir, else any test_*.py in workspace root
+        import re
+        import subprocess
 
+        workspace = Path(workspace_path)
+        test_path = workspace / "tests"
+        if test_path.exists():
+            pytest_target = str(test_path)
+        else:
+            root_tests = list(workspace.glob("test_*.py")) + list(workspace.glob("*_test.py"))
+            pytest_target = " ".join(str(p) for p in root_tests) if root_tests else ""
+
+        if pytest_target:
             try:
                 result = subprocess.run(
-                    f"python -m pytest {test_path} -v --tb=short",
+                    f"python -m pytest {pytest_target} -v --tb=short",
                     shell=True,
                     capture_output=True,
                     text=True,
@@ -154,10 +162,8 @@ class TaskRunner:
                     cwd=workspace_path,
                 )
 
-                # Parse results
-                import re
-                passed = len(re.findall(r'PASSED', result.stdout))
-                failed = len(re.findall(r'FAILED', result.stdout))
+                passed = len(re.findall(r"PASSED", result.stdout))
+                failed = len(re.findall(r"FAILED", result.stdout))
 
                 results["passed"] = passed
                 results["failed"] = failed
@@ -213,7 +219,7 @@ class TaskRunner:
             model_id=model_config.model_id,
             status=result.status,
             agent_result=AgentResult(
-                status="completed" if result.status == "success" else "failed",
+                status=AgentStatus.COMPLETED if result.status == "success" else AgentStatus.FAILED,
                 steps=[],
                 total_duration=result.duration,
             ),

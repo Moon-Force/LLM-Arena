@@ -16,6 +16,7 @@ from pathlib import Path
 sys.path.insert(0, "/workspace")
 
 from opencode.core.agent import OpenCodeAgent
+from opencode.core.fairness import DEFAULT_CONSTRAINTS
 from opencode.core.model_client import ModelClient
 from opencode.core.tool_registry import ToolRegistry
 
@@ -75,11 +76,12 @@ async def main():
     # Initialize tools
     tools = ToolRegistry()
 
-    # Initialize agent
+    # Initialize agent with frozen single-variable constraints
     agent = OpenCodeAgent(
         model_client=model,
         tool_registry=tools,
         max_steps=max_steps,
+        constraints=DEFAULT_CONSTRAINTS,
     )
 
     # Run the task

@@ -9,15 +9,16 @@ The OpenCodeAgent is the main orchestrator that manages the agent loop:
 
 from __future__ import annotations
 
-import asyncio
 import json
+import re
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Union
 
+from .fairness import DEFAULT_CONSTRAINTS, FrozenConstraints
+from .model_client import BaseModelClient, ModelResponse
 from .tool_registry import ToolRegistry
-from .model_client import ModelClient
 
 
 class AgentStatus(Enum):
@@ -51,66 +52,56 @@ class AgentResult:
     total_tokens: int = 0
     total_duration: float = 0.0
     error: Optional[str] = None
+    run_id: str = ""
 
 
 class OpenCodeAgent:
-    """Main agent class that orchestrates the coding task.
-
-    The agent follows a ReAct (Reasoning + Acting) pattern:
-    1. THINK: Analyze the current state and plan next steps
-    2. ACT: Execute a tool (read file, write file, run test, etc.)
-    3. OBSERVE: Get the result of the action
-    4. Repeat until task is complete or max steps reached
-    """
+    """Main agent class that orchestrates the coding task (ReAct loop)."""
 
     def __init__(
         self,
-        model_client: ModelClient,
+        model_client: BaseModelClient,
         tool_registry: ToolRegistry,
-        max_steps: int = 100,
+        max_steps: Optional[int] = None,
         system_prompt: Optional[str] = None,
+        constraints: Optional[FrozenConstraints] = None,
     ):
+        self.constraints = constraints or DEFAULT_CONSTRAINTS
         self.model = model_client
         self.tools = tool_registry
-        self.max_steps = max_steps
-        self.system_prompt = system_prompt or self._default_system_prompt()
+        # Frozen constraints win over per-call overrides (single-variable principle)
+        self.max_steps = (
+            self.constraints.max_steps if max_steps is None else min(max_steps, self.constraints.max_steps)
+        )
+        self.system_prompt = system_prompt or self.constraints.system_prompt
         self.status = AgentStatus.IDLE
         self.steps: list[AgentStep] = []
         self._callbacks: list[Callable] = []
-
-    def _default_system_prompt(self) -> str:
-        return """You are an expert coding assistant. Your task is to:
-1. Understand the given coding task
-2. Read the existing code if any
-3. Make necessary changes to fix bugs or implement features
-4. Run tests to verify your changes
-5. Continue iterating until all tests pass
-
-You have access to tools for reading/writing files and running commands.
-Always think step by step and explain your reasoning.
-"""
 
     def on_step(self, callback: Callable[[AgentStep], None]) -> None:
         """Register a callback to be called on each step."""
         self._callbacks.append(callback)
 
+    def _extract_content(self, response: Union[ModelResponse, dict, Any]) -> tuple[str, int]:
+        if isinstance(response, ModelResponse):
+            usage = response.usage or {}
+            return response.content or "", int(usage.get("total_tokens", 0) or 0)
+        if isinstance(response, dict):
+            content = response.get("content", "") or ""
+            usage = response.get("usage") or {}
+            return content, int(usage.get("total_tokens", 0) or 0)
+        content = getattr(response, "content", "") or str(response)
+        usage = getattr(response, "usage", {}) or {}
+        return content, int(usage.get("total_tokens", 0) or 0)
+
     async def run(self, task_description: str, working_dir: str) -> AgentResult:
-        """Run the agent on a task.
-
-        Args:
-            task_description: Description of the coding task
-            working_dir: Directory to work in
-
-        Returns:
-            AgentResult with the final status and outputs
-        """
+        """Run the agent on a task with frozen decoding knobs."""
         self.status = AgentStatus.THINKING
         self.steps = []
         start_time = time.time()
         total_tokens = 0
 
         try:
-            # Initialize conversation with system prompt and task
             messages = [
                 {"role": "system", "content": self.system_prompt},
                 {"role": "user", "content": task_description},
@@ -120,45 +111,61 @@ Always think step by step and explain your reasoning.
                 step = AgentStep(step_number=step_num)
                 step_start = time.time()
 
-                # THINK: Get LLM response
                 self.status = AgentStatus.THINKING
-                response = await self.model.chat(messages)
-                step.thought = response.get("content", "")
-                step.tokens_used = response.get("usage", {}).get("total_tokens", 0)
-                total_tokens += step.tokens_used
+                response = await self.model.chat(
+                    messages,
+                    temperature=self.constraints.temperature,
+                    max_tokens=self.constraints.max_tokens,
+                )
+                thought, tokens = self._extract_content(response)
+                step.thought = thought
+                step.tokens_used = tokens
+                total_tokens += tokens
 
-                # Check if task is complete
-                if "FINISHED" in step.thought or "COMPLETE" in step.thought:
-                    self.status = AgentStatus.COMPLETED
-                    break
+                if "FINISHED" in step.thought.upper() or "COMPLETE" in step.thought.upper():
+                    # Only complete if FINISHED is intentional end signal
+                    if "FINISHED" in step.thought.upper():
+                        self.status = AgentStatus.COMPLETED
+                        step.duration_ms = (time.time() - step_start) * 1000
+                        self.steps.append(step)
+                        break
 
-                # ACT: Parse and execute tool calls
                 self.status = AgentStatus.ACTING
                 tool_calls = self._parse_tool_calls(step.thought)
                 step.tool_calls = tool_calls
 
+                observations: list[str] = []
                 for tool_call in tool_calls:
                     result = await self.tools.execute(
                         tool_call["name"],
                         tool_call.get("arguments", {}),
                         working_dir=working_dir,
                     )
-                    step.observation = str(result)
+                    observations.append(str(result))
+                step.observation = "\n".join(observations)
 
-                # Update messages for next iteration
                 messages.append({"role": "assistant", "content": step.thought})
                 if step.observation:
-                    messages.append({"role": "user", "content": f"Observation: {step.observation}"})
+                    messages.append(
+                        {"role": "user", "content": f"Observation:\n{step.observation}"}
+                    )
+                elif not tool_calls:
+                    messages.append(
+                        {
+                            "role": "user",
+                            "content": (
+                                "No tool call detected. Use a ```tool fenced JSON block, "
+                                "or reply FINISHED if the task is complete."
+                            ),
+                        }
+                    )
 
                 step.duration_ms = (time.time() - step_start) * 1000
                 self.steps.append(step)
 
-                # Notify callbacks
                 for callback in self._callbacks:
                     callback(step)
-
             else:
-                # Max steps reached
                 self.status = AgentStatus.FAILED
                 return AgentResult(
                     status=AgentStatus.FAILED,
@@ -186,24 +193,16 @@ Always think step by step and explain your reasoning.
             )
 
     def _parse_tool_calls(self, text: str) -> list[dict]:
-        """Parse tool calls from LLM response.
-
-        Expected format:
-        ```tool
-        {"name": "read_file", "arguments": {"path": "src/main.py"}}
-        ```
-        """
-        tool_calls = []
-        import re
-
-        # Match code blocks with tool syntax
-        pattern = r'```tool\n(.*?)\n```'
+        """Parse tool calls from LLM response (frozen tool protocol)."""
+        tool_calls: list[dict] = []
+        pattern = r"```tool\s*\n(.*?)```"
         matches = re.findall(pattern, text, re.DOTALL)
 
         for match in matches:
             try:
-                tool_call = json.loads(match)
-                tool_calls.append(tool_call)
+                tool_call = json.loads(match.strip())
+                if isinstance(tool_call, dict) and "name" in tool_call:
+                    tool_calls.append(tool_call)
             except json.JSONDecodeError:
                 continue
 

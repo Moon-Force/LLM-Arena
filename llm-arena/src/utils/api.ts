@@ -52,6 +52,17 @@ class OpenCodeApi {
     return this.request('/tasks')
   }
 
+  // Frozen single-variable constraints
+  async getConstraints() {
+    return this.request<{
+      fingerprint: string
+      constraints: Record<string, unknown>
+      variable_allowed: string[]
+      variable_forbidden: string[]
+      note: string
+    }>('/constraints')
+  }
+
   // Arena Runs
   async getRuns(params?: { modelId?: string; taskId?: string; status?: string }) {
     const queryParams = new URLSearchParams()
@@ -78,13 +89,42 @@ class OpenCodeApi {
         model_id: modelId,
         task_id: taskId,
         container_config: options?.containerConfig,
+        // max_steps/timeout ignored by server (frozen); kept for compatibility
         max_steps: options?.maxSteps,
         timeout: options?.timeout,
-        // Frontend-configured credentials (preferred over server env)
+        // Only credentials + identity are variable
         api_key: options?.apiKey,
         provider: options?.provider,
         version: options?.version,
         base_url: options?.baseUrl,
+      }),
+    })
+  }
+
+  /** Multi-model fair arena (requires ≥2 models). */
+  async startArena(payload: {
+    taskId: string
+    models: Array<{
+      modelId: string
+      provider: string
+      version: string
+      apiKey?: string
+      baseUrl?: string
+    }>
+    parallel?: boolean
+  }) {
+    return this.request('/arena', {
+      method: 'POST',
+      body: JSON.stringify({
+        task_id: payload.taskId,
+        parallel: payload.parallel ?? true,
+        models: payload.models.map(m => ({
+          model_id: m.modelId,
+          provider: m.provider,
+          version: m.version,
+          api_key: m.apiKey,
+          base_url: m.baseUrl,
+        })),
       }),
     })
   }

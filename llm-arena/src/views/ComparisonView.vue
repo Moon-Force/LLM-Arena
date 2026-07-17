@@ -6,36 +6,44 @@ import { useArenaStore } from '@/stores/arena'
 const store = useArenaStore()
 const { t } = useI18n()
 const selectedModels = ref<string[]>([])
-const compareMetric = ref<'passRate' | 'hiddenPassRate' | 'codeQuality' | 'stability'>('passRate')
+const compareMetric = ref<'passRate' | 'hiddenPassRate' | 'stability' | 'overallScore'>('passRate')
 
 const metricLabels = computed(() => ({
   passRate: t('leaderboard.table.passRate'),
   hiddenPassRate: t('leaderboard.table.hidden'),
-  codeQuality: t('leaderboard.table.quality'),
   stability: t('leaderboard.table.stability'),
+  overallScore: t('leaderboard.table.score'),
 }))
 
 const selectedModelData = computed(() => {
   return store.models.filter(m => selectedModels.value.includes(m.id))
 })
 
+/** Real metrics from completed runs only (no Math.random). */
+function metricFor(modelId: string, key: typeof compareMetric.value): number | null {
+  const entry = store.leaderboard.find(e => e.modelId === modelId)
+  if (!entry) return null
+  const v = entry[key]
+  return typeof v === 'number' && !Number.isNaN(v) ? v : null
+}
+
 function toggleModel(modelId: string) {
   if (selectedModels.value.includes(modelId)) {
     selectedModels.value = selectedModels.value.filter(id => id !== modelId)
-  } else if (selectedModels.value.length < 3) {
+  } else if (selectedModels.value.length < 4) {
     selectedModels.value.push(modelId)
   }
 }
 
-function getBarWidth(value: number) {
-  return `${Math.min(value, 100)}%`
+function getBarWidth(value: number | null) {
+  if (value == null) return '0%'
+  return `${Math.min(Math.max(value, 0), 100)}%`
 }
 </script>
 
 <template>
   <div class="min-h-screen py-24 px-6">
     <div class="max-w-7xl mx-auto">
-      <!-- Header -->
       <div class="text-center mb-12">
         <h1 class="text-4xl md:text-5xl font-bold mb-4">
           <span class="gradient-text">{{ t('comparison.title') }}</span>
@@ -45,13 +53,13 @@ function getBarWidth(value: number) {
         </p>
       </div>
 
-      <!-- Model Selection -->
       <div class="glass-card p-6 mb-8">
         <h2 class="text-lg font-semibold mb-4">{{ t('comparison.selectModels') }}</h2>
         <div class="flex flex-wrap gap-3">
           <button
             v-for="model in store.models"
             :key="model.id"
+            type="button"
             :class="[
               'flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-200',
               selectedModels.includes(model.id)
@@ -71,28 +79,29 @@ function getBarWidth(value: number) {
         </div>
       </div>
 
-      <!-- Comparison Charts -->
       <div v-if="selectedModels.length > 0" class="space-y-6">
-        <!-- Metric Selector -->
         <div class="flex flex-wrap gap-2">
           <button
             v-for="(label, key) in metricLabels"
             :key="key"
+            type="button"
             :class="[
               'px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200',
               compareMetric === key
                 ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30'
                 : 'bg-kimi-surface text-kimi-muted border border-kimi-border hover:border-kimi-border-hover',
             ]"
-            @click="compareMetric = key"
+            @click="compareMetric = key as typeof compareMetric"
           >
             {{ label }}
           </button>
         </div>
 
-        <!-- Comparison Bars -->
         <div class="glass-card p-6">
-          <h3 class="text-lg font-semibold mb-6">{{ metricLabels[compareMetric] }} {{ t('comparison.title') }}</h3>
+          <h3 class="text-lg font-semibold mb-2">{{ metricLabels[compareMetric] }}</h3>
+          <p class="text-xs text-kimi-muted mb-6">
+            Based on completed arena runs only (no simulated scores).
+          </p>
           <div class="space-y-4">
             <div
               v-for="model in selectedModelData"
@@ -113,12 +122,18 @@ function getBarWidth(value: number) {
                   <div
                     class="h-full rounded-lg transition-all duration-500 flex items-center justify-end pr-3"
                     :style="{
-                      width: getBarWidth(Math.random() * 30 + 70),
+                      width: getBarWidth(metricFor(model.id, compareMetric)),
                       backgroundColor: model.color + '40',
                       borderRight: `3px solid ${model.color}`,
                     }"
                   >
-                    <span class="text-xs font-medium text-kimi-text">{{ (Math.random() * 30 + 70).toFixed(1) }}%</span>
+                    <span class="text-xs font-medium text-kimi-text">
+                      {{
+                        metricFor(model.id, compareMetric) != null
+                          ? metricFor(model.id, compareMetric)!.toFixed(1) + '%'
+                          : 'n/a'
+                      }}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -126,16 +141,15 @@ function getBarWidth(value: number) {
           </div>
         </div>
 
-        <!-- Radar Chart Placeholder -->
         <div class="glass-card p-6">
           <h3 class="text-lg font-semibold mb-6">{{ t('comparison.multiDimensional') }}</h3>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div
-              v-for="metric in ['Pass Rate', 'Hidden Pass', 'Code Quality', 'Stability', 'Safety', 'Speed', 'Cost Efficiency', 'Consistency']"
+              v-for="metric in (['passRate', 'hiddenPassRate', 'stability', 'overallScore'] as const)"
               :key="metric"
               class="p-4 rounded-xl bg-kimi-surface/50 border border-kimi-border/30"
             >
-              <div class="text-xs text-kimi-muted mb-2">{{ metric }}</div>
+              <div class="text-xs text-kimi-muted mb-2">{{ metricLabels[metric] }}</div>
               <div class="space-y-2">
                 <div
                   v-for="model in selectedModelData"
@@ -151,13 +165,19 @@ function getBarWidth(value: number) {
                       <div
                         class="h-full rounded-full transition-all duration-500"
                         :style="{
-                          width: `${Math.random() * 30 + 60}%`,
+                          width: getBarWidth(metricFor(model.id, metric)),
                           backgroundColor: model.color,
                         }"
                       />
                     </div>
                   </div>
-                  <span class="text-xs text-kimi-muted w-8 text-right">{{ (Math.random() * 30 + 60).toFixed(0) }}</span>
+                  <span class="text-xs text-kimi-muted w-10 text-right">
+                    {{
+                      metricFor(model.id, metric) != null
+                        ? metricFor(model.id, metric)!.toFixed(0)
+                        : '—'
+                    }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -166,11 +186,6 @@ function getBarWidth(value: number) {
       </div>
 
       <div v-else class="text-center py-12">
-        <div class="w-16 h-16 rounded-2xl bg-kimi-surface flex items-center justify-center mx-auto mb-4">
-          <svg class="w-8 h-8 text-kimi-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-          </svg>
-        </div>
         <p class="text-kimi-muted">{{ t('comparison.selectModels') }}</p>
       </div>
     </div>

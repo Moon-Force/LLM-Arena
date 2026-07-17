@@ -201,28 +201,27 @@ export const useArenaStore = defineStore('arena', () => {
         entry.passRate = (entry.passRate / entry.completedRuns) * 100
         entry.hiddenPassRate = (entry.hiddenPassRate / entry.completedRuns) * 100
         entry.stability = (entry.completedRuns / entry.runs) * 100
-        entry.codeQuality = Math.random() * 30 + 70 // Simulated
-        entry.safetyScore = Math.random() * 20 + 80 // Simulated
+        // No simulated quality/safety — only real metrics
+        entry.codeQuality = 0
+        entry.safetyScore = 0
 
-        // Calculate overall score based on leaderboard type
+        // Calculate overall score based on leaderboard type (real metrics only)
         switch (selectedLeaderboard.value) {
           case 'overall':
             entry.overallScore =
-              entry.hiddenPassRate * 0.4 +
-              entry.passRate * 0.2 +
-              entry.codeQuality * 0.15 +
-              entry.stability * 0.15 +
-              entry.safetyScore * 0.1
+              (entry.hiddenPassRate || entry.passRate) * 0.5 +
+              entry.passRate * 0.3 +
+              entry.stability * 0.2
             break
           case 'accuracy':
             entry.overallScore =
-              entry.hiddenPassRate * 0.6 +
+              (entry.hiddenPassRate || entry.passRate) * 0.6 +
               entry.passRate * 0.3 +
               entry.stability * 0.1
             break
           case 'value':
             entry.overallScore =
-              (entry.hiddenPassRate * 0.5 + entry.passRate * 0.2) /
+              (entry.passRate * 0.7 + entry.stability * 0.3) /
               (entry.avgCost * 0.01 + 1)
             break
         }
@@ -373,13 +372,36 @@ export const useArenaStore = defineStore('arena', () => {
     isLoading.value = true
     error.value = null
     try {
-      const data = await api.getRuns(filters)
-      runs.value = data
+      const data = await api.getRuns(filters) as ArenaRun[] | { runs: Record<string, unknown>[] }
+      const list = Array.isArray(data)
+        ? data
+        : ((data as { runs?: Record<string, unknown>[] }).runs ?? [])
+      runs.value = list.map(r =>
+        normalizeRun(r as Record<string, unknown>, '', ''),
+      )
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch runs'
       console.error('Failed to fetch runs:', err)
     } finally {
       isLoading.value = false
+    }
+  }
+
+  function normalizeRun(run: Record<string, unknown>, fallbackModelId: string, fallbackTaskId: string): ArenaRun {
+    const tr = (run.testResults || run.test_results) as ArenaRun['testResults'] | undefined
+    return {
+      id: String(run.id || run.run_id || `run-${Date.now()}`),
+      modelId: String(run.modelId || run.model_id || fallbackModelId),
+      taskId: String(run.taskId || run.task_id || fallbackTaskId),
+      status: (run.status as ArenaRun['status']) || 'running',
+      startedAt: String(run.startedAt || run.started_at || new Date().toISOString()),
+      completedAt: run.completedAt || run.completed_at
+        ? String(run.completedAt || run.completed_at)
+        : undefined,
+      duration: (run.duration as number | undefined) ?? undefined,
+      tokensUsed: (run.tokensUsed as number | undefined) ?? (run.tokens_used as number | undefined),
+      testResults: tr,
+      error: run.error as string | undefined,
     }
   }
 
@@ -395,7 +417,6 @@ export const useArenaStore = defineStore('arena', () => {
     isRunning.value = true
     error.value = null
     try {
-      // Prefer explicit options; otherwise use model config from Model Configuration page
       const model = getModelById.value(modelId)
       const runPayload = {
         ...options,
@@ -405,21 +426,61 @@ export const useArenaStore = defineStore('arena', () => {
         baseUrl: options?.baseUrl ?? model?.baseUrl,
       }
 
-      const run = await api.startRun(modelId, taskId, runPayload) as ArenaRun
-      // Normalize API response shape if backend returns run_id instead of id
-      const normalized: ArenaRun = {
-        id: (run as ArenaRun).id || (run as unknown as { run_id?: string }).run_id || `run-${Date.now()}`,
-        modelId: (run as ArenaRun).modelId || modelId,
-        taskId: (run as ArenaRun).taskId || taskId,
-        status: (run as ArenaRun).status || 'running',
-        startedAt: (run as ArenaRun).startedAt || new Date().toISOString(),
-        ...run,
-      }
+      const run = await api.startRun(modelId, taskId, runPayload) as Record<string, unknown>
+      const normalized = normalizeRun(run, modelId, taskId)
       runs.value.push(normalized)
       return normalized
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to start run'
       console.error('Failed to start run:', err)
+      throw err
+    } finally {
+      isRunning.value = false
+    }
+  }
+
+  /** Multi-model fair match: same frozen constraints, only model/API differ. */
+  async function startFairArena(
+    modelIds: string[],
+    taskId: string,
+    options?: { parallel?: boolean },
+  ) {
+    if (modelIds.length < 2) {
+      throw new Error('Select at least 2 models for a fair arena match')
+    }
+    isRunning.value = true
+    error.value = null
+    try {
+      const models = modelIds.map(id => {
+        const m = getModelById.value(id)
+        if (!m) throw new Error(`Model not found: ${id}`)
+        return {
+          modelId: m.id,
+          provider: m.provider,
+          version: m.version,
+          apiKey: m.apiKey,
+          baseUrl: m.baseUrl,
+        }
+      })
+      const result = await api.startArena({
+        taskId,
+        models,
+        parallel: options?.parallel ?? true,
+      }) as {
+        arena_id?: string
+        runs?: Record<string, unknown>[]
+        constraints_fingerprint?: string
+        report?: unknown
+      }
+
+      const newRuns = (result.runs || []).map(r =>
+        normalizeRun(r, String(r.model_id || r.modelId || ''), taskId),
+      )
+      runs.value.push(...newRuns)
+      return result
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to start arena'
+      console.error('Failed to start fair arena:', err)
       throw err
     } finally {
       isRunning.value = false
@@ -564,6 +625,7 @@ export const useArenaStore = defineStore('arena', () => {
     fetchTasks,
     fetchRuns,
     startArenaRun,
+    startFairArena,
     cancelArenaRun,
     fetchLeaderboardData,
     setLeaderboardType,

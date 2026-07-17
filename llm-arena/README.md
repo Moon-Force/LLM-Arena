@@ -2,6 +2,35 @@
 
 基于 OpenCode 的多模型编程能力评测平台，支持 Docker 容器化部署。
 
+## 单一变量原则（公平评测）
+
+对战中**仅允许**不同：
+
+- `model_id` / `provider` / `version`
+- `api_key` / `base_url`（接入凭证）
+
+以下全部**冻结**（见 `GET /api/v1/constraints`）：
+
+- 系统提示词与版本号、工具协议
+- `temperature=0`、`max_tokens`、`max_steps`、`timeout`
+- 容器资源限制
+
+多模型对战：
+
+```http
+POST /api/v1/arena
+{
+  "task_id": "bugfix-null-pointer",
+  "parallel": true,
+  "models": [
+    { "model_id": "deepseek-chat", "provider": "deepseek", "version": "deepseek-chat" },
+    { "model_id": "mimo-v2.5-pro", "provider": "mimo", "version": "mimo-v2.5-pro", "base_url": "https://api.xiaomimimo.com/v1" }
+  ]
+}
+```
+
+前端 Arena 页多选 ≥2 个模型即可发起公平对战。无 Docker 时使用本地进程内 Agent（同一冻结配置）。
+
 ## 快速启动
 
 ### 方式一：仅启动前端（开发模式）
