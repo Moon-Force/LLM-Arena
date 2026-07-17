@@ -1,0 +1,43 @@
+# OpenCode Model Runner Dockerfile
+# Each model runs in its own isolated container
+
+FROM python:3.11-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    build-essential \
+    nodejs \
+    npm \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python tools
+RUN pip install --no-cache-dir \
+    pytest \
+    pytest-cov \
+    black \
+    flake8 \
+    mypy \
+    bandit
+
+# Set working directory
+WORKDIR /workspace
+
+# Copy model runner code
+COPY opencode/core/ ./opencode/core/
+COPY opencode/models/ ./opencode/models/
+COPY scripts/runner.py ./runner.py
+
+# Environment variables (set at runtime)
+ENV MODEL_ID=""
+ENV MODEL_PROVIDER=""
+ENV MODEL_VERSION=""
+ENV MAX_STEPS=100
+ENV TIMEOUT=300
+
+# Create workspace directories
+RUN mkdir -p /workspace/src /workspace/tests /workspace/results
+
+# The runner will be started by the API server via Docker API
+CMD ["python", "runner.py"]

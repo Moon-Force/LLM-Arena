@@ -1,0 +1,120 @@
+{
+  "nav": {
+    "home": "首页",
+    "leaderboard": "排行榜",
+    "arena": "竞技场",
+    "comparison": "对比",
+    "models": "模型"
+  },
+  "hero": {
+    "badge": "OpenCode 竞技场",
+    "title": "LLM 竞技场",
+    "subtitle": "公平透明的编程智能体评测平台",
+    "description": "在受控环境中比较 LLM 的编程能力。相同的任务、相同的工具、相同的约束——只有模型不同。",
+    "startArena": "开始竞技",
+    "viewLeaderboard": "查看排行榜"
+  },
+  "stats": {
+    "models": "模型数",
+    "tasks": "任务数",
+    "languages": "语言数",
+    "runs": "运行数"
+  },
+  "features": {
+    "title": "为什么选择",
+    "subtitle": "为严格、可复现的编程智能体评测而构建",
+    "controlledEnv": {
+      "title": "受控环境",
+      "description": "每个模型在相同的容器中运行，使用固定的 OpenCode 版本、Agent 配置和系统提示词。"
+    },
+    "fairComparison": {
+      "title": "公平对比",
+      "description": "遵循单一变量原则，确保每次运行只有模型和 API 配置不同。"
+    },
+    "comprehensive": {
+      "title": "全面指标",
+      "description": "追踪通过率、代码质量、Token 消耗、执行时间和安全评分。"
+    }
+  },
+  "models": {
+    "title": "支持的",
+    "subtitle": "当前正在评测以下主流 LLM 编程智能体"
+  },
+  "modelConfig": {
+    "title": "模型配置",
+    "subtitle": "管理和配置竞技场的 LLM 模型",
+    "addModel": "添加模型",
+    "editModel": "编辑模型",
+    "deleteModel": "删除模型",
+    "modelName": "模型名称",
+    "provider": "提供商",
+    "version": "模型版本",
+    "description": "描述",
+    "color": "颜色",
+    "apiKey": "API 密钥",
+    "apiKeyOptional": "可选 - 为空则使用环境变量",
+    "baseUrl": "基础 URL",
+    "temperature": "温度",
+    "maxTokens": "最大 Token 数",
+    "enabled": "已启用",
+    "disabled": "已禁用",
+    "custom": "自定义",
+    "saveChanges": "保存更改",
+    "cancel": "取消",
+    "confirmDelete": "确定要删除此模型吗？",
+    "resetDefaults": "重置为默认值"
+  },
+  "cta": {
+    "title": "准备好",
+    "subtitle": "开始你的第一次竞技运行，看看不同模型在真实编程任务上的表现。",
+    "button": "启动竞技场"
+  },
+  "leaderboard": {
+    "title": "排行榜",
+    "subtitle": "多维度比较模型性能",
+    "tabs": {
+      "overall": "综合排行",
+      "accuracy": "正确率榜",
+      "value": "性价比榜"
+    },
+    "table": {
+      "rank": "排名",
+      "model": "模型",
+      "provider": "提供商",
+      "runs": "运行数",
+      "passRate": "通过率",
+      "hidden": "隐藏用例",
+      "stability": "稳定性",
+      "quality": "质量",
+      "safety": "安全",
+      "score": "得分"
+    }
+  },
+  "arena": {
+    "title": "竞技场",
+    "subtitle": "配置并运行多模型编程任务",
+    "configuration": "配置",
+    "selectModel": "选择模型",
+    "selectTask": "选择任务",
+    "startRun": "开始竞技运行",
+    "running": "运行中...",
+    "recentRuns": "最近运行",
+    "noRuns": "尚无运行记录。选择模型和任务开始。",
+    "passRate": "通过率",
+    "tokens": "Token 数",
+    "duration": "耗时"
+  },
+  "comparison": {
+    "title": "对比",
+    "subtitle": "模型性能并排对比",
+    "selectModels": "选择要对比的模型（最多3个）",
+    "multiDimensional": "多维度对比"
+  },
+  "common": {
+    "active": "活跃",
+    "pending": "等待中",
+    "running": "运行中",
+    "completed": "已完成",
+    "failed": "失败"
+  }
+}

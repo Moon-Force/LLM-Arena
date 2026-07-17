@@ -1,0 +1,20 @@
+{
+  "id": "feature-rate-limiter",
+  "name": "API Rate Limiter",
+  "description": "Implement a token bucket rate limiter with Redis backend. The rate limiter should support configurable rate limits and burst capacity.",
+  "language": "python",
+  "type": "feature",
+  "difficulty": "medium",
+  "test_cases": 10,
+  "expected_files": ["rate_limiter.py", "test_rate_limiter.py"],
+  "hidden_tests": [
+    {
+      "name": "test_concurrent_requests",
+      "description": "Test rate limiter under concurrent load"
+    },
+    {
+      "name": "test_redis_failure",
+      "description": "Test graceful degradation when Redis is unavailable"
+    }
+  ]
+}

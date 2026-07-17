@@ -1,0 +1,20 @@
+{
+  "id": "bugfix-null-pointer",
+  "name": "Null Pointer Fix",
+  "description": "Fix a null pointer exception in a data processing pipeline. The pipeline processes user data but crashes when encountering null values.",
+  "language": "python",
+  "type": "bugfix",
+  "difficulty": "easy",
+  "test_cases": 5,
+  "expected_files": ["data_pipeline.py", "test_pipeline.py"],
+  "hidden_tests": [
+    {
+      "name": "test_null_values",
+      "description": "Test handling of null values in data"
+    },
+    {
+      "name": "test_empty_list",
+      "description": "Test with empty input list"
+    }
+  ]
+}

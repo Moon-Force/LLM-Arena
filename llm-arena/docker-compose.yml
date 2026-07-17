@@ -1,0 +1,138 @@
+# OpenCode Arena - Docker Setup
+# Multi-model coding agent arena with isolated containers
+
+services:
+  # Main API server
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: opencode-api
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENCODE_ENV=production
+      - OPENCODE_MAX_STEPS=100
+      - OPENCODE_TIMEOUT=300
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=sqlite:///data/opencode.db
+    volumes:
+      - ./data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - redis
+    networks:
+      - opencode-network
+
+  # Redis for caching and pub/sub
+  redis:
+    image: redis:7-alpine
+    container_name: opencode-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - opencode-network
+
+  # Model Runner - Claude Opus
+  model-claude-opus:
+    build:
+      context: .
+      dockerfile: Dockerfile.model
+    container_name: opencode-model-claude-opus
+    environment:
+      - MODEL_ID=claude-opus
+      - MODEL_PROVIDER=anthropic
+      - MODEL_VERSION=claude-3-opus-20240229
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    volumes:
+      - model-claude-opus-data:/workspace
+    networks:
+      - opencode-network
+    profiles:
+      - models
+
+  # Model Runner - GPT-4o
+  model-gpt-4o:
+    build:
+      context: .
+      dockerfile: Dockerfile.model
+    container_name: opencode-model-gpt-4o
+    environment:
+      - MODEL_ID=gpt-4o
+      - MODEL_PROVIDER=openai
+      - MODEL_VERSION=gpt-4o
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - model-gpt-4o-data:/workspace
+    networks:
+      - opencode-network
+    profiles:
+      - models
+
+  # Model Runner - Gemini Pro
+  model-gemini-pro:
+    build:
+      context: .
+      dockerfile: Dockerfile.model
+    container_name: opencode-model-gemini-pro
+    environment:
+      - MODEL_ID=gemini-pro
+      - MODEL_PROVIDER=google
+      - MODEL_VERSION=gemini-1.5-pro
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    volumes:
+      - model-gemini-pro-data:/workspace
+    networks:
+      - opencode-network
+    profiles:
+      - models
+
+  # Model Runner - DeepSeek Chat
+  model-deepseek-chat:
+    build:
+      context: .
+      dockerfile: Dockerfile.model
+    container_name: opencode-model-deepseek-chat
+    environment:
+      - MODEL_ID=deepseek-chat
+      - MODEL_PROVIDER=deepseek
+      - MODEL_VERSION=deepseek-chat
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+    volumes:
+      - model-deepseek-chat-data:/workspace
+    networks:
+      - opencode-network
+    profiles:
+      - models
+
+  # Model Runner - Claude Sonnet
+  model-claude-sonnet:
+    build:
+      context: .
+      dockerfile: Dockerfile.model
+    container_name: opencode-model-claude-sonnet
+    environment:
+      - MODEL_ID=claude-sonnet
+      - MODEL_PROVIDER=anthropic
+      - MODEL_VERSION=claude-3-5-sonnet-20241022
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    volumes:
+      - model-claude-sonnet-data:/workspace
+    networks:
+      - opencode-network
+    profiles:
+      - models
+
+volumes:
+  redis-data:
+  model-claude-opus-data:
+  model-gpt-4o-data:
+  model-gemini-pro-data:
+  model-deepseek-chat-data:
+  model-claude-sonnet-data:
+
+networks:
+  opencode-network:
+    driver: bridge
