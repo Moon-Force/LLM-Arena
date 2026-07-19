@@ -8,6 +8,16 @@
     "comparison": "Comparison",
     "models": "Models"
   },
+  "search": {
+    "title": "Project search",
+    "placeholder": "Search pages, tasks, tracks, models…",
+    "placeholderShort": "Search",
+    "hint": "Ctrl/Cmd + K to search",
+    "empty": "No matches",
+    "navigate": "move",
+    "open": "open",
+    "close": "close"
+  },
   "tasks": {
     "title": "Task Lab",
     "subtitle": "Create and edit evaluation tasks in the browser — brief, scaffold, and pytest. Saved under tasks/ and available in the Arena immediately.",

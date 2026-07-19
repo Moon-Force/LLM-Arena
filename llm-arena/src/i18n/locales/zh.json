@@ -8,6 +8,16 @@
     "comparison": "对比",
     "models": "模型"
   },
+  "search": {
+    "title": "项目搜索",
+    "placeholder": "搜索页面、任务、赛道、模型…",
+    "placeholderShort": "搜索",
+    "hint": "Ctrl/Cmd + K 打开搜索",
+    "empty": "没有匹配结果",
+    "navigate": "选择",
+    "open": "打开",
+    "close": "关闭"
+  },
   "tasks": {
     "title": "任务管理",
     "subtitle": "在前端创建/编辑评测任务：题面、脚手架代码与 pytest。保存后写入 tasks/ 并立即出现在竞技场。",

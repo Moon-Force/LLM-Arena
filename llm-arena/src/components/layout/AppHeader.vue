@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
+import CommandSearch from '@/components/CommandSearch.vue'
 
 const route = useRoute()
 const { t } = useI18n()
@@ -91,6 +92,7 @@ onUnmounted(() => {
         </nav>
 
         <div class="hidden md:flex items-center gap-3">
+          <CommandSearch />
           <LanguageSwitcher />
           <router-link
             to="/arena"
