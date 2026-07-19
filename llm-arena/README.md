@@ -1,11 +1,12 @@
-# LLM Arena - OpenCode 多模型编程竞技场
+# LLM Arena · OpenCode 多模型编程竞技场
 
-> **Tags:** LLM benchmark · coding agent · OpenCode · fair evaluation · SWE-bench style · pytest · multi-model arena · agent leaderboard
+> 关键词：LLM 评测 · 编程智能体 · OpenCode · 公平对战 · pytest · 多模型排行榜 · SWE-bench 风格
 
 基于**官方 [opencode-ai](https://www.npmjs.com/package/opencode-ai)** 的多模型编程能力评测平台。  
-Agent 不自研：对战进程 = `opencode serve` + 官方内置 tools。
+Agent **不自研**：对战进程 = `opencode serve` + 官方内置 tools。
 
-**仓库：** [github.com/Moon-Force/LLM-Arena](https://github.com/Moon-Force/LLM-Arena)
+**仓库：** [github.com/Moon-Force/LLM-Arena](https://github.com/Moon-Force/LLM-Arena)  
+**总览（中文）：** [仓库根 README](../README.md)
 
 ## 单一变量原则（公平评测）
 
