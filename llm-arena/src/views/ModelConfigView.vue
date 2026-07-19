@@ -164,19 +164,20 @@ function getProviderName(providerId: string): string {
 </script>
 
 <template>
-  <div class="min-h-screen py-24 px-6">
-    <div class="max-w-7xl mx-auto">
+  <div class="min-h-screen py-16 md:py-20 px-5 md:px-8">
+    <div class="max-w-[1200px] mx-auto">
       <!-- Header -->
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
         <div>
-          <h1 class="text-4xl md:text-5xl font-bold mb-4">
+          <div class="eyebrow mb-3">Roster config</div>
+          <h1 class="display-title text-4xl md:text-5xl mb-3">
             <span class="gradient-text">{{ t('modelConfig.title') }}</span>
           </h1>
-          <p class="text-kimi-muted text-lg">
+          <p class="text-[#9a9488] text-lg leading-relaxed">
             {{ t('modelConfig.subtitle') }}
           </p>
-          <p class="text-xs text-kimi-muted mt-2">{{ t('modelConfig.envSyncHint') }}</p>
-          <p v-if="syncMsg" class="text-sm text-emerald-400 mt-2">{{ syncMsg }}</p>
+          <p class="text-xs text-[#7a7368] mt-2 font-mono">{{ t('modelConfig.envSyncHint') }}</p>
+          <p v-if="syncMsg" class="text-sm text-[#3dd6c6] mt-2">{{ syncMsg }}</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <button

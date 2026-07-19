@@ -231,11 +231,11 @@ function argChips(input: unknown): string[] {
 
 <template>
   <div
-    class="oc-session flex flex-col h-full min-h-[420px] rounded-b-xl overflow-hidden border-t border-white/[0.06]"
+    class="oc-session flex flex-col h-full min-h-[420px] rounded-b-[14px] overflow-hidden border-t border-white/[0.06]"
     data-component="session-turn"
   >
-    <!-- session chrome (minimal, like desktop app header strip) -->
-    <div class="flex items-center gap-2 px-3 py-2 border-b border-white/[0.06] bg-[#0e1016] text-[11px] shrink-0">
+    <!-- session chrome -->
+    <div class="flex items-center gap-2 px-3 py-2 border-b border-white/[0.06] bg-[#0f0d0b] text-[11px] shrink-0">
       <span
         class="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold text-white"
         :style="{ backgroundColor: modelColor || '#6366f1' }"
@@ -246,11 +246,11 @@ function argChips(input: unknown): string[] {
         <div class="text-slate-200 text-xs font-medium truncate">{{ modelName }}</div>
         <div class="text-slate-500 text-[10px] font-mono truncate">
           agent build
-          <span v-if="inputTokens != null || outputTokens != null" class="text-slate-400">
+          <span v-if="inputTokens != null || outputTokens != null" class="text-[#7a7368]">
             ·
-            <span class="text-sky-400/90">in {{ (inputTokens ?? 0).toLocaleString() }}</span>
-            <span class="text-slate-600">/</span>
-            <span class="text-amber-400/90">out {{ (outputTokens ?? 0).toLocaleString() }}</span>
+            <span class="text-[#3dd6c6]/90">in {{ (inputTokens ?? 0).toLocaleString() }}</span>
+            <span class="text-[#5c564c]">/</span>
+            <span class="text-[#ff8a66]/90">out {{ (outputTokens ?? 0).toLocaleString() }}</span>
           </span>
           <span v-else-if="tokens != null"> · {{ tokens.toLocaleString() }} tok</span>
           <span v-if="tokens != null && (inputTokens != null || outputTokens != null)" class="text-slate-600">

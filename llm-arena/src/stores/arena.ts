@@ -451,10 +451,12 @@ export const useArenaStore = defineStore('arena', () => {
         ? data
         : ((data as { tasks?: Task[] }).tasks ?? [])
       // Normalize snake_case fields from backend if present
-      tasks.value = list.map((t: Task & { test_cases?: number; trackId?: string }) => ({
+      tasks.value = list.map((t: Task & { test_cases?: number; trackId?: string; expected_files?: string[] }) => ({
         ...t,
         testCases: t.testCases ?? t.test_cases ?? 0,
         track: t.track || t.trackId || trackId,
+        custom: Boolean((t as Task).custom),
+        expectedFiles: t.expectedFiles ?? t.expected_files ?? [],
       }))
       if (tasks.value.length === 0) {
         console.warn('API returned 0 tasks; using offline task catalog (real ids)')

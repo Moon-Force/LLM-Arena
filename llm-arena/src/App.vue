@@ -4,26 +4,16 @@ import AppHeader from './components/layout/AppHeader.vue'
 </script>
 
 <template>
-  <div class="min-h-screen bg-kimi-dark">
-    <AppHeader />
-    <main class="pt-16">
-      <RouterView v-slot="{ Component }">
-        <transition name="fade" mode="out-in">
-          <component :is="Component" />
-        </transition>
-      </RouterView>
-    </main>
+  <div class="arena-stage min-h-screen">
+    <div class="arena-content min-h-screen flex flex-col">
+      <AppHeader />
+      <main class="flex-1 pt-[4.5rem]">
+        <RouterView v-slot="{ Component, route }">
+          <transition name="page" mode="out-in">
+            <component :is="Component" :key="route.path" />
+          </transition>
+        </RouterView>
+      </main>
+    </div>
   </div>
 </template>
-
-<style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-</style>

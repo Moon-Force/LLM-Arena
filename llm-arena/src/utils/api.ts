@@ -118,6 +118,70 @@ class OpenCodeApi {
     return this.request(`/tasks${suffix}`)
   }
 
+  async getTask(taskId: string, includeFiles = false) {
+    const q = includeFiles ? '?include_files=true' : ''
+    return this.request<Record<string, unknown>>(`/tasks/${encodeURIComponent(taskId)}${q}`)
+  }
+
+  async createTask(payload: {
+    id: string
+    name: string
+    description: string
+    language?: string
+    type?: string
+    difficulty?: string
+    track?: string
+    expected_files?: string[]
+    files: Record<string, string>
+    overwrite?: boolean
+    force?: boolean
+  }) {
+    return this.request<{ ok: boolean; task: Record<string, unknown> }>('/tasks', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      timeoutMs: 60_000,
+    } as RequestInit)
+  }
+
+  async updateTask(
+    taskId: string,
+    payload: {
+      name?: string
+      description?: string
+      language?: string
+      type?: string
+      difficulty?: string
+      track?: string
+      expected_files?: string[]
+      files: Record<string, string>
+      force?: boolean
+    },
+  ) {
+    return this.request<{ ok: boolean; task: Record<string, unknown> }>(
+      `/tasks/${encodeURIComponent(taskId)}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+        timeoutMs: 60_000,
+      } as RequestInit,
+    )
+  }
+
+  async deleteTask(taskId: string, force = false) {
+    const q = force ? '?force=true' : ''
+    return this.request<{ ok: boolean; deleted: string }>(
+      `/tasks/${encodeURIComponent(taskId)}${q}`,
+      { method: 'DELETE' },
+    )
+  }
+
+  async reloadTasks() {
+    return this.request<{ ok: boolean; count: number; by_track: Record<string, number> }>(
+      '/tasks/reload',
+      { method: 'POST' },
+    )
+  }
+
   async getConstraints() {
     return this.request<{
       fingerprint: string

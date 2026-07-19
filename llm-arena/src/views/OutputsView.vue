@@ -246,14 +246,15 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen py-24 px-6">
-    <div class="max-w-[1600px] mx-auto">
-      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
+  <div class="min-h-screen py-16 md:py-20 px-5 md:px-8">
+    <div class="max-w-[1480px] mx-auto">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
         <div>
-          <h1 class="text-4xl md:text-5xl font-bold mb-3">
+          <div class="eyebrow mb-3">Artifacts</div>
+          <h1 class="display-title text-4xl md:text-5xl mb-3">
             <span class="gradient-text">{{ t('outputs.title') }}</span>
           </h1>
-          <p class="text-kimi-muted text-lg max-w-2xl">
+          <p class="text-[#9a9488] text-lg max-w-2xl leading-relaxed">
             {{ t('outputs.subtitle') }}
           </p>
         </div>

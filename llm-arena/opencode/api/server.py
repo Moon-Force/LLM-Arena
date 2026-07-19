@@ -285,6 +285,24 @@ async def list_models():
     }
 
 
+def _public_task(t) -> dict:
+    return {
+        "id": t.id,
+        "name": t.name,
+        "description": t.description,
+        "language": t.language,
+        "type": t.type,
+        "difficulty": t.difficulty,
+        "test_cases": t.test_cases,
+        "testCases": t.test_cases,
+        "track": t.track,
+        "trackId": t.track,
+        "custom": bool(getattr(t, "custom", False)),
+        "expected_files": list(getattr(t, "expected_files", []) or []),
+        "expectedFiles": list(getattr(t, "expected_files", []) or []),
+    }
+
+
 @app.get("/api/v1/tasks")
 async def list_tasks(
     language: Optional[str] = None,
@@ -298,23 +316,113 @@ async def list_tasks(
     else:
         tasks = []
 
-    return {
-        "tasks": [
-            {
-                "id": t.id,
-                "name": t.name,
-                "description": t.description,
-                "language": t.language,
-                "type": t.type,
-                "difficulty": t.difficulty,
-                "test_cases": t.test_cases,
-                "testCases": t.test_cases,
-                "track": t.track,
-                "trackId": t.track,
-            }
-            for t in tasks
-        ]
-    }
+    return {"tasks": [_public_task(t) for t in tasks]}
+
+
+@app.get("/api/v1/tasks/{task_id}")
+async def get_task(task_id: str, include_files: bool = False):
+    if not task_runner:
+        raise HTTPException(status_code=503, detail="Task runner not ready")
+    task = task_runner.get_task(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail=f"task not found: {task_id}")
+    payload = _public_task(task)
+    if include_files:
+        try:
+            detail = task_runner.read_task_files(task_id)
+            payload["files"] = detail.get("files") or {}
+            payload["meta"] = detail.get("task") or {}
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=str(exc)) from exc
+    return payload
+
+
+@app.post("/api/v1/tasks")
+async def create_task(data: dict):
+    """Create a custom evaluation task under tasks/ (reloadable without restart)."""
+    if not task_runner:
+        raise HTTPException(status_code=503, detail="Task runner not ready")
+
+    task_id = data.get("id") or data.get("task_id")
+    name = data.get("name")
+    description = data.get("description")
+    if not task_id or not name or description is None:
+        raise HTTPException(
+            status_code=400,
+            detail="id, name, and description are required",
+        )
+
+    files = data.get("files")
+    if not isinstance(files, dict) or not files:
+        raise HTTPException(
+            status_code=400,
+            detail="files map is required, e.g. {\"solution.py\": \"...\", \"test_solution.py\": \"...\"}",
+        )
+
+    try:
+        task = task_runner.create_task(
+            task_id=str(task_id),
+            name=str(name),
+            description=str(description),
+            language=str(data.get("language") or "python"),
+            type_=str(data.get("type") or data.get("type_") or "feature"),
+            difficulty=str(data.get("difficulty") or "medium"),
+            track=data.get("track"),
+            expected_files=data.get("expected_files") or data.get("expectedFiles"),
+            files={str(k): str(v) for k, v in files.items()},
+            hidden_tests=data.get("hidden_tests") or data.get("hiddenTests") or [],
+            test_cases=int(data.get("test_cases") or data.get("testCases") or 0),
+            custom=True,
+            overwrite=bool(data.get("overwrite") or False),
+        )
+    except FileExistsError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    return {"ok": True, "task": _public_task(task)}
+
+
+@app.put("/api/v1/tasks/{task_id}")
+async def update_task(task_id: str, data: dict):
+    """Overwrite an existing custom task (same shape as POST)."""
+    if not task_runner:
+        raise HTTPException(status_code=503, detail="Task runner not ready")
+    existing = task_runner.get_task(task_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail=f"task not found: {task_id}")
+    if not existing.custom and not data.get("force"):
+        raise HTTPException(
+            status_code=403,
+            detail="built-in task; set force=true to overwrite",
+        )
+    body = {**data, "id": task_id, "overwrite": True}
+    return await create_task(body)
+
+
+@app.delete("/api/v1/tasks/{task_id}")
+async def delete_task(task_id: str, force: bool = False):
+    if not task_runner:
+        raise HTTPException(status_code=503, detail="Task runner not ready")
+    try:
+        task_runner.delete_task(task_id, force=force)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"ok": True, "deleted": task_id}
+
+
+@app.post("/api/v1/tasks/reload")
+async def reload_tasks():
+    if not task_runner:
+        raise HTTPException(status_code=503, detail="Task runner not ready")
+    n = task_runner.reload()
+    return {"ok": True, "count": n, "by_track": task_runner.count_by_track()}
 
 
 @app.post("/api/v1/runs")

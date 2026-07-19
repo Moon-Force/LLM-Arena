@@ -42,13 +42,14 @@ function getBarWidth(value: number | null) {
 </script>
 
 <template>
-  <div class="min-h-screen py-24 px-6">
-    <div class="max-w-7xl mx-auto">
-      <div class="text-center mb-12">
-        <h1 class="text-4xl md:text-5xl font-bold mb-4">
+  <div class="min-h-screen py-16 md:py-20 px-5 md:px-8">
+    <div class="max-w-[1200px] mx-auto">
+      <div class="mb-12 max-w-2xl">
+        <div class="eyebrow mb-3">Head to head</div>
+        <h1 class="display-title text-4xl md:text-5xl mb-4">
           <span class="gradient-text">{{ t('comparison.title') }}</span>
         </h1>
-        <p class="text-kimi-muted text-lg max-w-2xl mx-auto">
+        <p class="text-[#9a9488] text-lg leading-relaxed">
           {{ t('comparison.subtitle') }}
         </p>
       </div>

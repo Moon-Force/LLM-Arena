@@ -51,11 +51,28 @@ export interface Task {
   id: string
   name: string
   description: string
-  language: 'python' | 'typescript' | 'html'
-  type: 'bugfix' | 'feature'
+  language: 'python' | 'typescript' | 'html' | string
+  type: 'bugfix' | 'feature' | 'algorithm' | string
   difficulty: 'easy' | 'medium' | 'hard'
   testCases: number
   track?: EvalTrack | string
+  custom?: boolean
+  expectedFiles?: string[]
+}
+
+/** Payload for POST /api/v1/tasks */
+export interface TaskCreatePayload {
+  id: string
+  name: string
+  description: string
+  language: string
+  type: string
+  difficulty: 'easy' | 'medium' | 'hard'
+  track: string
+  expected_files?: string[]
+  files: Record<string, string>
+  overwrite?: boolean
+  force?: boolean
 }
 
 export interface AgentStepLog {

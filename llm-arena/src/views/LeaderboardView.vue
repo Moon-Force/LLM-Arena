@@ -52,17 +52,17 @@ onMounted(async () => {
 })
 
 function getRankStyle(index: number) {
-  if (index === 0) return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
-  if (index === 1) return 'bg-gray-400/20 text-gray-300 border-gray-400/30'
-  if (index === 2) return 'bg-amber-600/20 text-amber-400 border-amber-600/30'
-  return 'bg-kimi-surface text-kimi-muted border-kimi-border'
+  if (index === 0) return 'bg-[#e8c547]/20 text-[#e8c547] border-[#e8c547]/35'
+  if (index === 1) return 'bg-white/10 text-[#d4cdc0] border-white/20'
+  if (index === 2) return 'bg-[#ff5c33]/15 text-[#ff8a66] border-[#ff5c33]/30'
+  return 'bg-white/[0.03] text-[#7a7368] border-white/10'
 }
 
 function getScoreColor(score: number) {
-  if (score >= 90) return 'text-emerald-400'
-  if (score >= 70) return 'text-blue-400'
-  if (score >= 50) return 'text-amber-400'
-  return 'text-rose-400'
+  if (score >= 90) return 'text-[#3dd6c6]'
+  if (score >= 70) return 'text-[#ff8a66]'
+  if (score >= 50) return 'text-[#e8c547]'
+  return 'text-[#ff4d6d]'
 }
 
 function formatPercent(value: number) {
@@ -75,26 +75,27 @@ function formatNumber(value: number) {
 </script>
 
 <template>
-  <div class="min-h-screen py-24 px-6">
-    <div class="max-w-7xl mx-auto">
+  <div class="min-h-screen py-16 md:py-20 px-5 md:px-8">
+    <div class="max-w-[1200px] mx-auto">
       <!-- Header -->
-      <div class="leaderboard-header text-center mb-12">
-        <h1 class="text-4xl md:text-5xl font-bold mb-4">
+      <div class="leaderboard-header mb-12 max-w-2xl">
+        <div class="eyebrow mb-3">Standings</div>
+        <h1 class="display-title text-4xl md:text-6xl mb-4">
           <span class="gradient-text">{{ t('leaderboard.title') }}</span>
         </h1>
-        <p class="text-kimi-muted text-lg max-w-2xl mx-auto">
+        <p class="text-[#9a9488] text-lg leading-relaxed">
           {{ t('leaderboard.subtitle') }}
         </p>
       </div>
 
       <!-- Track filter: scores only comparable within the same track -->
-      <div class="flex flex-wrap justify-center gap-2 mb-6">
+      <div class="flex flex-wrap gap-2 mb-6">
         <button
           type="button"
-          class="px-3 py-1.5 rounded-lg text-xs border font-medium"
+          class="px-3 py-1.5 rounded-md text-xs border font-mono font-medium transition-all"
           :class="store.selectedLeaderboardTrack === 'all'
-            ? 'border-violet-500/50 bg-violet-500/15 text-violet-200'
-            : 'border-kimi-border text-kimi-muted hover:text-kimi-text'"
+            ? 'border-[#ff5c33]/50 bg-[#ff5c33]/15 text-[#ff8a66]'
+            : 'border-white/10 text-[#7a7368] hover:text-[#f3efe6]'"
           @click="setTrack('all')"
         >
           {{ t('tracks.all') }}
@@ -103,31 +104,31 @@ function formatNumber(value: number) {
           v-for="tr in store.tracks.filter(x => x.enabled || (x.task_count || 0) > 0)"
           :key="tr.id"
           type="button"
-          class="px-3 py-1.5 rounded-lg text-xs border font-medium"
+          class="px-3 py-1.5 rounded-md text-xs border font-mono font-medium transition-all"
           :class="store.selectedLeaderboardTrack === tr.id
-            ? 'border-violet-500/50 bg-violet-500/15 text-violet-200'
-            : 'border-kimi-border text-kimi-muted hover:text-kimi-text'"
+            ? 'border-[#ff5c33]/50 bg-[#ff5c33]/15 text-[#ff8a66]'
+            : 'border-white/10 text-[#7a7368] hover:text-[#f3efe6]'"
           @click="setTrack(tr.id)"
         >
           {{ trackLabel(tr) }}
           <span v-if="tr.task_count != null" class="opacity-60 ml-1">{{ tr.task_count }}</span>
         </button>
       </div>
-      <p class="text-center text-[11px] text-kimi-muted mb-8 max-w-xl mx-auto">
+      <p class="text-[11px] text-[#7a7368] mb-8 max-w-xl">
         {{ t('leaderboard.byTrackHint') }}
       </p>
 
       <!-- Score-type Tabs -->
-      <div class="flex justify-center mb-10">
-        <div class="inline-flex bg-kimi-surface rounded-xl p-1 border border-kimi-border">
+      <div class="flex mb-10">
+        <div class="inline-flex bg-white/[0.03] rounded-xl p-1 border border-white/[0.08]">
           <button
             v-for="tab in tabs"
             :key="tab.key"
             :class="[
-              'px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2',
+              'px-5 py-2.5 rounded-lg text-sm font-display font-semibold transition-all duration-300 flex items-center gap-2',
               activeTab === tab.key
-                ? 'bg-blue-500/10 text-blue-400'
-                : 'text-kimi-muted hover:text-kimi-text',
+                ? 'bg-gradient-to-r from-[#ff8a66] to-[#ff5c33] text-[#1a0c08] shadow-duel'
+                : 'text-[#7a7368] hover:text-[#f3efe6]',
             ]"
             @click="setActiveTab(tab.key)"
           >

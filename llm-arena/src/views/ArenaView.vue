@@ -33,12 +33,37 @@ const toolsByCategory = computed(() => {
 const matchRuns = ref<ArenaRun[]>([])
 /** Default to OpenCode dialogue — what users asked for */
 const panelTab = ref<Record<string, 'terminal' | 'page'>>({})
+/** After a duel starts, collapse config so the match board owns the viewport */
+const configCollapsed = ref(false)
+const toolsCollapsed = ref(false)
 
 const canStart = computed(
   () => selectedModels.value.length >= 2 && !!selectedTask.value && !store.isRunning,
 )
 const enabledModels = computed(() => store.models.filter(m => m.enabled !== false))
 const showMatchBoard = computed(() => matchRuns.value.length > 0)
+/** Compact chrome once a run is live or results are on screen */
+const duelActive = computed(() => store.isRunning || showMatchBoard.value)
+
+const selectedTrackMeta = computed(() =>
+  store.tracks.find(tr => tr.id === store.selectedTrack) || null,
+)
+const selectedTaskMeta = computed(() =>
+  store.tasks.find(t => t.id === selectedTask.value) || null,
+)
+const selectedModelNames = computed(() =>
+  selectedModels.value
+    .map(id => store.getModelById(id)?.name || id)
+    .filter(Boolean),
+)
+
+function expandConfig() {
+  configCollapsed.value = false
+}
+
+function collapseConfig() {
+  configCollapsed.value = true
+}
 
 function trackLabel(track: { id: string; name?: { zh?: string; en?: string } | string }): string {
   const n = track.name
@@ -172,6 +197,10 @@ async function startRun() {
     return
   }
 
+  // Shrink config rail so OpenCode dialogue gets the floor
+  configCollapsed.value = true
+  toolsCollapsed.value = true
+
   // Optimistic shells so UI never sticks on "Starting…" waiting for HTTP
   matchRuns.value = selectedModels.value.map((modelId, i) => ({
     id: `pending-${Date.now()}-${i}`,
@@ -218,9 +247,21 @@ async function startRun() {
         })
         for (const run of matchRuns.value) {
           if (!panelTab.value[run.id]) panelTab.value[run.id] = 'terminal'
-          // Keep terminal tab focused while OpenCode is streaming
+          // Streaming: stay on OpenCode dialogue; once finished, jump to preview
           if (run.status === 'running' || run.status === 'pending') {
             panelTab.value[run.id] = 'terminal'
+          } else if (
+            run.status === 'completed'
+            || run.status === 'success'
+            || run.status === 'failed'
+          ) {
+            if (panelTab.value[run.id] !== 'page') {
+              panelTab.value[run.id] = 'page'
+              // Prefetch preview as soon as this model finishes (parallel arena)
+              if (!run.previewUrl && !run.previewHtml) {
+                void refreshPreview(run)
+              }
+            }
           }
         }
       },
@@ -245,11 +286,6 @@ async function startRun() {
         })
       : store.runs.slice(-selectedModels.value.length)
 
-    // Default tab = terminal (OpenCode dialogue)
-    for (const run of matchRuns.value) {
-      panelTab.value[run.id] = 'terminal'
-    }
-
     // Load accurate HTTP preview URL (CSS/JS relative paths work)
     await Promise.all(
       matchRuns.value.map(async (run, i) => {
@@ -263,6 +299,15 @@ async function startRun() {
         }
       }),
     )
+
+    // Match finished → jump each panel to page preview
+    for (const run of matchRuns.value) {
+      if (run.status === 'completed' || run.status === 'success' || run.status === 'failed') {
+        panelTab.value[run.id] = 'page'
+      } else {
+        panelTab.value[run.id] = panelTab.value[run.id] || 'terminal'
+      }
+    }
   } catch (err) {
     console.error('Failed to start arena:', err)
     matchRuns.value = matchRuns.value.map(r => ({
@@ -303,10 +348,10 @@ function isStubHtml(html: string): boolean {
 
 const statusColor: Record<string, string> = {
   pending: 'bg-amber-500/10 text-amber-400',
-  running: 'bg-blue-500/10 text-blue-400',
-  completed: 'bg-emerald-500/10 text-emerald-400',
-  failed: 'bg-rose-500/10 text-rose-400',
-  success: 'bg-emerald-500/10 text-emerald-400',
+  running: 'bg-[#ff5c33]/12 text-[#ff8a66]',
+  completed: 'bg-[#3dd6c6]/12 text-[#3dd6c6]',
+  failed: 'bg-[#ff4d6d]/12 text-[#ff4d6d]',
+  success: 'bg-[#3dd6c6]/12 text-[#3dd6c6]',
 }
 
 function formatDuration(seconds?: number): string {
@@ -331,41 +376,46 @@ function tokenSum(run: ArenaRun): number | undefined {
 </script>
 
 <template>
-  <div class="min-h-screen py-24 px-6">
-    <div class="max-w-[1600px] mx-auto">
-      <div class="text-center mb-10">
-        <h1 class="text-4xl md:text-5xl font-bold mb-4">
+  <div class="min-h-screen py-16 md:py-20 px-5 md:px-8">
+    <div class="max-w-[1480px] mx-auto">
+      <div class="mb-10 max-w-3xl">
+        <div class="eyebrow mb-3">Duel floor</div>
+        <h1 class="display-title text-4xl md:text-6xl mb-4">
           <span class="gradient-text">{{ t('arena.title') }}</span>
         </h1>
-        <p class="text-kimi-muted text-lg max-w-2xl mx-auto">
+        <p class="text-[#9a9488] text-lg leading-relaxed">
           {{ t('arena.subtitle') }}
         </p>
       </div>
 
-      <div class="mb-6 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-sm">
-        <div class="font-semibold text-blue-300 mb-1">{{ t('arena.singleVariable') }}</div>
-        <p class="text-kimi-muted">{{ constraintsNote || t('arena.singleVariableHint') }}</p>
-        <p v-if="constraintsFp" class="mt-2 font-mono text-xs text-kimi-muted break-all">
+      <!-- Protocol note: compact strip while dueling -->
+      <div
+        v-if="!duelActive || !configCollapsed"
+        class="mb-6 p-5 glass-card text-sm transition-all duration-500"
+      >
+        <div class="font-display font-bold text-[#ff8a66] mb-1">{{ t('arena.singleVariable') }}</div>
+        <p class="text-[#9a9488]">{{ constraintsNote || t('arena.singleVariableHint') }}</p>
+        <p v-if="constraintsFp" class="mt-2 font-mono text-[11px] text-[#7a7368] break-all">
           fingerprint: {{ constraintsFp }}
         </p>
-        <p v-if="lastArenaId" class="mt-1 font-mono text-xs text-emerald-400/80">
+        <p v-if="lastArenaId" class="mt-1 font-mono text-[11px] text-[#3dd6c6]/90">
           arena: {{ lastArenaId }}
         </p>
       </div>
 
-      <!-- Official OpenCode tools (frozen for all contestants) -->
+      <!-- Official OpenCode tools: collapsible when duel active -->
       <div
-        v-if="opencodeTools"
-        class="mb-6 p-4 rounded-xl bg-violet-500/10 border border-violet-500/20 text-sm"
+        v-if="opencodeTools && (!duelActive || !toolsCollapsed)"
+        class="mb-6 p-5 glass-card text-sm transition-all duration-500"
       >
         <div class="flex flex-wrap items-center gap-2 mb-2">
-          <div class="font-semibold text-violet-200">{{ t('arena.opencodeTools') }}</div>
-          <span class="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300">
+          <div class="font-display font-bold text-[#f3efe6]">{{ t('arena.opencodeTools') }}</div>
+          <span class="text-[11px] px-2 py-0.5 rounded-full bg-[#3dd6c6]/15 text-[#3dd6c6] border border-[#3dd6c6]/25">
             {{ t('arena.opencodeToolsEnabled', { n: opencodeTools.enabled_count }) }}
           </span>
           <span
             v-if="opencodeTools.denied_count"
-            class="text-[11px] px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-300"
+            class="text-[11px] px-2 py-0.5 rounded-full bg-[#ff4d6d]/15 text-[#ff4d6d] border border-[#ff4d6d]/25"
           >
             {{ t('arena.opencodeToolsDenied', { n: opencodeTools.denied_count }) }}
           </span>
@@ -374,60 +424,146 @@ function tokenSum(run: ArenaRun): number | undefined {
             :href="opencodeTools.docs"
             target="_blank"
             rel="noopener"
-            class="ml-auto text-[11px] text-violet-300/80 hover:text-violet-200"
+            class="text-[11px] text-[#ff8a66]/80 hover:text-[#ff8a66]"
           >
             opencode.ai/docs/tools ↗
           </a>
+          <button
+            v-if="duelActive"
+            type="button"
+            class="ml-auto text-[11px] font-mono text-[#7a7368] hover:text-[#ff8a66]"
+            @click="toolsCollapsed = true"
+          >
+            {{ t('arena.collapse') }}
+          </button>
         </div>
-        <p class="text-kimi-muted text-xs mb-3">
+        <p class="text-[#9a9488] text-xs mb-3">
           {{ opencodeTools.note || t('arena.opencodeToolsHint') }}
         </p>
         <div class="space-y-3">
           <div v-for="[cat, tools] in toolsByCategory" :key="cat">
-            <div class="text-[10px] uppercase tracking-wider text-kimi-muted mb-1.5 font-mono">
+            <div class="text-[10px] uppercase tracking-[0.16em] text-[#7a7368] mb-1.5 font-mono">
               {{ cat }}
             </div>
             <div class="flex flex-wrap gap-1.5">
               <div
                 v-for="tool in tools"
                 :key="tool.id"
-                class="group relative px-2.5 py-1 rounded-lg border text-[11px] font-mono cursor-default"
+                class="group relative px-2.5 py-1 rounded-md border text-[11px] font-mono cursor-default transition-colors"
                 :class="tool.default === 'deny'
-                  ? 'border-rose-500/30 bg-rose-500/10 text-rose-300/90'
-                  : 'border-violet-500/25 bg-violet-500/10 text-violet-100'"
+                  ? 'border-[#ff4d6d]/30 bg-[#ff4d6d]/10 text-[#ff8a9e]'
+                  : 'border-[#ff5c33]/25 bg-[#ff5c33]/10 text-[#f3efe6]'"
                 :title="tool.description + (tool.arena_note ? ' — ' + tool.arena_note : '')"
               >
                 <span class="font-semibold">{{ tool.name }}</span>
                 <span
                   class="ml-1.5 text-[10px] opacity-70"
-                  :class="tool.default === 'deny' ? 'text-rose-300' : 'text-emerald-300'"
+                  :class="tool.default === 'deny' ? 'text-[#ff4d6d]' : 'text-[#3dd6c6]'"
                 >
                   {{ tool.default === 'deny' ? t('arena.toolDeny') : t('arena.toolAllow') }}
                 </span>
                 <span
                   v-if="tool.experimental"
-                  class="ml-1 text-[9px] text-amber-300/80"
+                  class="ml-1 text-[9px] text-[#e8c547]/80"
                 >exp</span>
               </div>
             </div>
           </div>
         </div>
       </div>
+      <button
+        v-else-if="opencodeTools && duelActive && toolsCollapsed"
+        type="button"
+        class="mb-4 text-[11px] font-mono text-[#7a7368] hover:text-[#ff8a66] transition-colors"
+        @click="toolsCollapsed = false"
+      >
+        {{ t('arena.showTools') }} · {{ opencodeTools.enabled_count }} tools
+      </button>
 
       <div v-if="store.error" class="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400">
         {{ store.error }}
       </div>
 
-      <div class="grid lg:grid-cols-12 gap-6">
-        <!-- Config sidebar -->
-        <div class="lg:col-span-3">
+      <!-- Compact config strip when duel is active -->
+      <transition
+        enter-active-class="transition-all duration-400 ease-out"
+        enter-from-class="opacity-0 -translate-y-2"
+        enter-to-class="opacity-100 translate-y-0"
+        leave-active-class="transition-all duration-250 ease-in"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="configCollapsed && duelActive"
+          class="mb-5 glass-card px-4 py-3 flex flex-wrap items-center gap-3"
+        >
+          <div class="font-display font-bold text-sm text-[#f3efe6] shrink-0">
+            {{ t('arena.configuration') }}
+          </div>
+          <span class="hidden sm:inline w-px h-4 bg-white/10" />
+          <div class="flex flex-wrap items-center gap-2 text-[11px] font-mono min-w-0 flex-1">
+            <span
+              class="px-2 py-0.5 rounded-md border border-[#ff5c33]/30 bg-[#ff5c33]/10 text-[#ff8a66]"
+              :title="t('arena.trackHint')"
+            >
+              {{ t('tracks.label') }}:
+              {{ selectedTrackMeta ? trackLabel(selectedTrackMeta) : store.selectedTrack }}
+            </span>
+            <span class="px-2 py-0.5 rounded-md border border-white/10 text-[#b8b0a2] truncate max-w-[14rem]">
+              {{ selectedTaskMeta?.name || selectedTask || '—' }}
+            </span>
+            <span
+              v-for="(name, i) in selectedModelNames"
+              :key="name + i"
+              class="px-2 py-0.5 rounded-md border border-white/10 text-[#9a9488]"
+            >
+              {{ name }}
+            </span>
+            <span
+              v-if="store.isRunning"
+              class="px-2 py-0.5 rounded-md border border-[#ff5c33]/25 text-[#ff8a66] animate-pulse"
+            >
+              {{ t('arena.running') }}
+            </span>
+          </div>
+          <button
+            type="button"
+            class="btn-secondary !py-1.5 !px-3 !text-xs shrink-0"
+            :disabled="store.isRunning"
+            @click="expandConfig"
+          >
+            {{ t('arena.expandConfig') }}
+          </button>
+        </div>
+      </transition>
+
+      <div
+        class="grid gap-6 transition-all duration-500"
+        :class="configCollapsed && duelActive ? 'lg:grid-cols-1' : 'lg:grid-cols-12'"
+      >
+        <!-- Config sidebar (full form) -->
+        <div
+          v-show="!(configCollapsed && duelActive)"
+          class="transition-all duration-500"
+          :class="configCollapsed && duelActive ? 'lg:col-span-0' : 'lg:col-span-3'"
+        >
           <div class="glass-card p-5 sticky top-20">
-            <h2 class="text-lg font-semibold mb-4">{{ t('arena.configuration') }}</h2>
+            <div class="flex items-center justify-between gap-2 mb-4">
+              <h2 class="text-lg font-display font-bold tracking-tight">{{ t('arena.configuration') }}</h2>
+              <button
+                v-if="duelActive"
+                type="button"
+                class="text-[11px] font-mono text-[#7a7368] hover:text-[#ff8a66]"
+                @click="collapseConfig"
+              >
+                {{ t('arena.collapse') }}
+              </button>
+            </div>
 
             <!-- Track selector: partitions task pool only; tools stay frozen -->
             <div class="mb-5">
-              <label class="block text-sm font-medium text-kimi-muted mb-2">{{ t('tracks.label') }}</label>
-              <p class="text-[11px] text-kimi-muted mb-2">{{ t('arena.trackHint') }}</p>
+              <label class="block text-sm font-medium text-kimi-muted mb-1">{{ t('tracks.label') }}</label>
+              <p class="text-[11px] text-kimi-muted mb-2 leading-snug">{{ t('arena.trackHint') }}</p>
               <div class="flex flex-wrap gap-1.5">
                 <button
                   v-for="tr in store.tracks.filter(x => x.enabled || x.beta)"
@@ -436,11 +572,11 @@ function tokenSum(run: ArenaRun): number | undefined {
                   class="px-2.5 py-1.5 rounded-lg text-xs border font-medium transition-colors"
                   :class="[
                     store.selectedTrack === tr.id
-                      ? 'border-violet-500/50 bg-violet-500/15 text-violet-200'
+                      ? 'border-[#ff5c33]/50 bg-[#ff5c33]/15 text-[#ff8a66]'
                       : 'border-kimi-border bg-kimi-surface text-kimi-muted hover:text-kimi-text',
                     !tr.enabled ? 'opacity-60' : '',
                   ]"
-                  :disabled="!tr.enabled"
+                  :disabled="!tr.enabled || store.isRunning"
                   :title="typeof tr.description === 'object' ? (tr.description?.zh || tr.description?.en) : String(tr.description || '')"
                   @click="tr.enabled && selectTrack(tr.id)"
                 >
@@ -460,8 +596,9 @@ function tokenSum(run: ArenaRun): number | undefined {
                   type="button"
                   class="w-full flex items-center gap-2 p-2.5 rounded-xl border text-left text-sm"
                   :class="selectedModels.includes(model.id)
-                    ? 'border-blue-500/50 bg-blue-500/5'
+                    ? 'border-[#ff5c33]/45 bg-[#ff5c33]/8'
                     : 'border-kimi-border bg-kimi-surface'"
+                  :disabled="store.isRunning"
                   @click="toggleModel(model.id)"
                 >
                   <div
@@ -489,14 +626,15 @@ function tokenSum(run: ArenaRun): number | undefined {
                   type="button"
                   class="w-full p-2.5 rounded-xl border text-left text-sm"
                   :class="selectedTask === task.id
-                    ? 'border-blue-500/50 bg-blue-500/5'
+                    ? 'border-[#ff5c33]/45 bg-[#ff5c33]/8'
                     : 'border-kimi-border bg-kimi-surface'"
+                  :disabled="store.isRunning"
                   @click="selectedTask = task.id"
                 >
                   <div class="font-medium truncate">{{ task.name }}</div>
                   <div class="text-[11px] text-kimi-muted">
                     {{ task.language }}
-                    <span v-if="task.track" class="text-violet-300/90"> · {{ task.track }}</span>
+                    <span v-if="task.track" class="text-[#ff8a66]/90"> · {{ task.track }}</span>
                     <span v-if="task.language === 'html'" class="text-cyan-400"> · UI</span>
                   </div>
                 </button>
@@ -504,7 +642,7 @@ function tokenSum(run: ArenaRun): number | undefined {
             </div>
 
             <label class="flex items-center gap-2 mb-4 text-sm text-kimi-muted">
-              <input v-model="parallel" type="checkbox" class="rounded border-kimi-border" />
+              <input v-model="parallel" type="checkbox" class="rounded border-kimi-border" :disabled="store.isRunning" />
               {{ t('arena.parallel') }}
             </label>
 
@@ -521,14 +659,17 @@ function tokenSum(run: ArenaRun): number | undefined {
         </div>
 
         <!-- Match board: OpenCode terminals side by side -->
-        <div class="lg:col-span-9 space-y-4">
+        <div
+          class="space-y-4 transition-all duration-500"
+          :class="configCollapsed && duelActive ? 'lg:col-span-1' : 'lg:col-span-9'"
+        >
           <div v-if="!showMatchBoard && !store.isRunning" class="glass-card p-12 text-center text-kimi-muted">
             <p class="text-base mb-2">{{ t('arena.terminalEmpty') }}</p>
             <p class="text-sm opacity-70">{{ t('arena.terminalEmptyHint') }}</p>
           </div>
 
           <div v-if="store.isRunning && !showMatchBoard" class="glass-card p-8 text-center">
-            <div class="inline-flex items-center gap-3 text-blue-300">
+            <div class="inline-flex items-center gap-3 text-[#ff8a66]">
               <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -537,7 +678,7 @@ function tokenSum(run: ArenaRun): number | undefined {
             </div>
           </div>
 
-          <div v-if="store.isRunning && showMatchBoard" class="mb-3 flex items-center gap-2 text-sm text-blue-300">
+          <div v-if="store.isRunning && showMatchBoard" class="mb-3 flex items-center gap-2 text-sm text-[#ff8a66]">
             <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -603,7 +744,7 @@ function tokenSum(run: ArenaRun): number | undefined {
                     type="button"
                     class="px-3 py-1.5 rounded-lg font-medium"
                     :class="(panelTab[run.id] || 'terminal') === 'terminal'
-                      ? 'bg-violet-500/20 text-violet-200'
+                      ? 'bg-[#ff5c33]/18 text-[#ff8a66]'
                       : 'text-kimi-muted hover:text-kimi-text'"
                     @click="setTab(run.id, 'terminal')"
                   >
@@ -613,7 +754,7 @@ function tokenSum(run: ArenaRun): number | undefined {
                     type="button"
                     class="px-3 py-1.5 rounded-lg font-medium"
                     :class="panelTab[run.id] === 'page'
-                      ? 'bg-emerald-500/20 text-emerald-200'
+                      ? 'bg-[#3dd6c6]/18 text-[#3dd6c6]'
                       : 'text-kimi-muted hover:text-kimi-text'"
                     @click="setTab(run.id, 'page')"
                   >

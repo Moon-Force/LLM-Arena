@@ -5,6 +5,7 @@ import ArenaView from '../views/ArenaView.vue'
 import ComparisonView from '../views/ComparisonView.vue'
 import ModelConfigView from '../views/ModelConfigView.vue'
 import OutputsView from '../views/OutputsView.vue'
+import TasksView from '../views/TasksView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -23,6 +24,11 @@ const router = createRouter({
       path: '/arena',
       name: 'arena',
       component: ArenaView,
+    },
+    {
+      path: '/tasks',
+      name: 'tasks',
+      component: TasksView,
     },
     {
       path: '/comparison',

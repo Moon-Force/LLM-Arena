@@ -11,13 +11,6 @@ const languages = [
   { code: 'zh', label: '中', name: '中文' },
 ]
 
-function toggleLanguage() {
-  const newLocale = locale.value === 'zh' ? 'en' : 'zh'
-  locale.value = newLocale
-  localStorage.setItem('locale', newLocale)
-  document.documentElement.lang = newLocale
-}
-
 function setLanguage(code: string) {
   locale.value = code
   localStorage.setItem('locale', code)
@@ -26,18 +19,24 @@ function setLanguage(code: string) {
 </script>
 
 <template>
-  <div class="flex items-center gap-1">
+  <div
+    class="inline-flex items-center p-0.5 rounded-lg border border-white/[0.08] bg-white/[0.03]"
+    role="group"
+    aria-label="Language"
+  >
     <button
       v-for="lang in languages"
       :key="lang.code"
-      :class="[
-        'px-2 py-1 rounded-md text-xs font-medium transition-all duration-200',
+      type="button"
+      class="min-w-[2.25rem] px-2.5 py-1.5 rounded-md text-[11px] font-mono font-medium tracking-wide transition-all duration-300"
+      :class="
         currentLang === lang.code
-          ? 'bg-blue-500/20 text-blue-400'
-          : 'text-kimi-muted hover:text-kimi-text hover:bg-kimi-surface',
-      ]"
-      @click="setLanguage(lang.code)"
+          ? 'bg-[#ff5c33] text-[#1a0c08] shadow-duel'
+          : 'text-[#7a7368] hover:text-[#f3efe6]'
+      "
       :title="lang.name"
+      :aria-pressed="currentLang === lang.code"
+      @click="setLanguage(lang.code)"
     >
       {{ lang.label }}
     </button>
