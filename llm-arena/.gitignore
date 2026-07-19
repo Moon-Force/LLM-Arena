@@ -5,6 +5,10 @@
 .env.local
 .env.*.local
 
+# Per-agent isolated workspaces
+data/workspaces/
+**/data/workspaces/
+
 # Logs
 logs
 *.log
@@ -24,6 +28,9 @@ coverage
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/settings.json
 .idea
 *.suo
 *.ntvs*

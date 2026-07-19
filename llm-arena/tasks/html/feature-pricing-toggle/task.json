@@ -1,0 +1,14 @@
+{
+  "id": "feature-pricing-toggle",
+  "name": "Pricing Page with Billing Toggle",
+  "description": "Build a pricing section with plan cards and a billing period toggle (frontend agent rubric: pricing page). Required: (1) section id pricing; (2) toggle control id billing-toggle (button or input) that switches body or #pricing between data-billing=\"monthly\" and data-billing=\"yearly\" (or class billing-yearly); (3) three plan cards with class plan-card and data-plan one of starter|pro|enterprise; (4) each card shows price element class plan-price; (5) yearly prices must differ from monthly in the DOM (e.g. data-monthly / data-yearly attributes or dual spans .price-monthly / .price-yearly); (6) CTA buttons class plan-cta. Vanilla HTML/CSS/JS. FINISHED when complete.",
+  "language": "html",
+  "type": "feature",
+  "difficulty": "medium",
+  "test_cases": 8,
+  "expected_files": [
+    "index.html"
+  ],
+  "source": "Inspired by frontend coding agent rubrics: edit/generate pricing page with toggle (Frontman workflow analysis tasks).",
+  "track": "frontend"
+}

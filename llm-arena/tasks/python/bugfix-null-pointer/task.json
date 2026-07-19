@@ -6,7 +6,10 @@
   "type": "bugfix",
   "difficulty": "easy",
   "test_cases": 5,
-  "expected_files": ["data_pipeline.py", "test_pipeline.py"],
+  "expected_files": [
+    "data_pipeline.py",
+    "test_pipeline.py"
+  ],
   "hidden_tests": [
     {
       "name": "test_null_values",
@@ -16,5 +19,6 @@
       "name": "test_empty_list",
       "description": "Test with empty input list"
     }
-  ]
+  ],
+  "track": "bugfix"
 }

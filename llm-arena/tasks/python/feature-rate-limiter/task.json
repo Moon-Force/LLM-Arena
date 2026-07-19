@@ -6,7 +6,10 @@
   "type": "feature",
   "difficulty": "medium",
   "test_cases": 10,
-  "expected_files": ["rate_limiter.py", "test_rate_limiter.py"],
+  "expected_files": [
+    "rate_limiter.py",
+    "test_rate_limiter.py"
+  ],
   "hidden_tests": [
     {
       "name": "test_concurrent_requests",
@@ -16,5 +19,6 @@
       "name": "test_redis_failure",
       "description": "Test graceful degradation when Redis is unavailable"
     }
-  ]
+  ],
+  "track": "feature"
 }

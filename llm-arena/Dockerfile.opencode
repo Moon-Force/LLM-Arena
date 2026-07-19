@@ -1,0 +1,30 @@
+# Isolated official OpenCode agent for arena runs.
+# Each contestant gets one ephemeral container with ONLY its workspace mounted.
+FROM node:22-bookworm-slim
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    OPENCODE_DISABLE_AUTOUPDATE=1 \
+    CI=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    git \
+    python3 \
+    python3-pip \
+    python3-venv \
+    && rm -rf /var/lib/apt/lists/*
+
+# pytest for in-workspace evaluation (optional; host also evaluates)
+RUN pip3 install --break-system-packages --no-cache-dir \
+    "pytest>=8.3.0" \
+    "pytest-asyncio>=0.24.0"
+
+# Official OpenCode CLI (tools: bash/read/write/edit/grep/glob/…)
+RUN npm install -g opencode-ai@1.18.3
+
+WORKDIR /workspace
+EXPOSE 4096
+
+# Serve binds all interfaces so host can reach published port
+CMD ["opencode", "serve", "--hostname", "0.0.0.0", "--port", "4096"]

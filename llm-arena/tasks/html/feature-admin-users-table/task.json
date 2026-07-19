@@ -1,0 +1,28 @@
+{
+  "id": "feature-admin-users-table",
+  "name": "Admin Users Dashboard",
+  "description": "Build a dense **admin console** for user management (Claude Cookbook admin-table style + product UI density). Vanilla HTML/CSS/JS only; Google Fonts OK; no React/Vue/CDN UI kits.\n\n## Product\nApp name **Nimbus Admin**. Audience: internal ops. Goal: scan users, filter, take actions.\n\n## Required layout & DOM\n1. App shell: `#app-shell` with left sidebar `#sidebar` and main `#main`.\n2. Sidebar: brand `#sidebar-brand` text Nimbus, nav items `#nav-overview` `#nav-users` `#nav-billing` `#nav-settings` (Users should look active via class `nav-active` on `#nav-users` or parent).\n3. Top bar `#topbar` with page title `#page-title` (Users), search input `#global-search`, and avatar button `#user-menu`.\n4. KPI row `#kpi-row` with ≥3 `.kpi-card`, each with `.kpi-label` and `.kpi-value` (numbers OK as static).\n5. Toolbar `#table-toolbar`: filter select `#filter-role` options All/Admin/Member/Viewer, status select `#filter-status` options All/Active/Invited/Suspended, button `#btn-invite` text matching /Invite|Add user/i.\n6. Data table `#users-table` with thead columns at least: Name, Email, Role, Status, Last active, Actions.\n7. tbody `#users-tbody` with ≥8 `.user-row` rows. Each row MUST include:\n   - `.user-name`, `.user-email`\n   - `.user-role` with text Admin|Member|Viewer\n   - `.user-status` with text Active|Invited|Suspended and a status pill class `.status-pill`\n   - actions: button `.btn-edit` and button `.btn-more` (or `.btn-delete`)\n8. Pagination `#pagination` with `#page-prev`, `#page-next`, and label `#page-info`.\n9. Empty state `#table-empty` (hidden by default when rows exist).\n10. Modal `#invite-modal` (hidden by default) opened by `#btn-invite`, containing form `#invite-form` with inputs `#invite-email` `#invite-role` and buttons `#invite-cancel` `#invite-submit`.\n\n## Behavior (vanilla JS)\n- Clicking `#btn-invite` shows `#invite-modal` (remove hidden / set aria-hidden=false / class open).\n- `#invite-cancel` or backdrop closes modal.\n- Changing `#filter-role` or `#filter-status` filters visible rows (hide non-matching `.user-row`). Combine both filters with AND.\n- `#global-search` filters rows by name/email substring (case-insensitive).\n- Prefer accessible patterns: modal focus trap optional; `aria-modal` on modal; keyboard Esc closes modal.\n\n## Visual bar\nDark dense product UI OR clean light ops UI. Use CSS variables. Table must be scannable (zebra or row hover). Avoid generic purple gradient marketing look.\n\nReply FINISHED when shell + table + filters + modal work.",
+  "language": "html",
+  "type": "feature",
+  "difficulty": "hard",
+  "test_cases": 13,
+  "expected_files": [
+    "index.html"
+  ],
+  "hidden_tests": [
+    {
+      "name": "test_shell",
+      "description": "Sidebar + main + topbar"
+    },
+    {
+      "name": "test_table_density",
+      "description": "≥8 user rows with role/status/actions"
+    },
+    {
+      "name": "test_filter_modal_js",
+      "description": "Filter + invite modal hooks"
+    }
+  ],
+  "source": "Claude Cookbook frontend aesthetics Example 3 (admin panel data table) + Refero dashboard density patterns + common agent admin-console rubrics.",
+  "track": "frontend"
+}

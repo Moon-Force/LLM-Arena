@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact — a11y broken</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #111; color: #eee; padding: 2rem; }
+    input, textarea { display: block; width: 100%; max-width: 420px; margin: 0.5rem 0 1rem; padding: 0.5rem; }
+    /* BUG: no focus-visible styles */
+  </style>
+</head>
+<body>
+  <h1>Contact us</h1>
+  <!-- BUG: missing labels, aria, validation -->
+  <form id="contact-form">
+    <input id="name" name="name" type="text" placeholder="Name" />
+    <input id="email" name="email" type="text" placeholder="Email" />
+    <textarea id="message" name="message" placeholder="Message"></textarea>
+    <div id="form-error" style="display:none;color:#f88"></div>
+    <button id="form-submit">Send</button>
+  </form>
+  <script>
+    // BUG: no validation
+  </script>
+</body>
+</html>

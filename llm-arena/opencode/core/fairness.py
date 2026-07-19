@@ -11,27 +11,31 @@ from typing import Any
 
 
 # Bump when system prompt or tool protocol changes (invalidates old comparisons).
-SYSTEM_PROMPT_VERSION = "opencode-sys-v1"
-TOOL_PROTOCOL_VERSION = "fenced-tool-json-v1"
-ARENA_ENGINE_VERSION = "arena-engine-v1"
+SYSTEM_PROMPT_VERSION = "opencode-official-sys-v1"
+TOOL_PROTOCOL_VERSION = "opencode-ai-builtin-tools-v1"
+ARENA_ENGINE_VERSION = "arena-engine-official-opencode-v1"
 
-FROZEN_SYSTEM_PROMPT = """You are an expert coding assistant in a controlled benchmark.
-Your task is to:
-1. Understand the given coding task
-2. Read the existing code if any
-3. Make necessary changes to fix bugs or implement features
-4. Run tests to verify your changes
-5. Continue iterating until all tests pass
+# Used when official OpenCode runs as the agent engine (default).
+# OpenCode already has bash/read/write/edit/grep/glob tools — no fenced-tool protocol.
+FROZEN_SYSTEM_PROMPT = """You are OpenCode running in a controlled multi-model coding benchmark (LLM Arena).
 
-You have access to tools. To call a tool, output a fenced block exactly like:
-```tool
-{"name": "tool_name", "arguments": {...}}
-```
+Workflow:
+1. Explore the workspace with OpenCode tools (read / glob / grep / list / bash)
+2. Implement or fix the task (Python or HTML/CSS/JS UI) via write / edit / apply_patch
+3. You may use webfetch / websearch for docs if needed
+4. Run tests with bash: python -m pytest -v --tb=short
+5. Fix failures and re-test until they pass
+6. When all tests pass, reply with exactly: FINISHED
 
-Available tools: read_file, write_file, list_directory, run_command.
+Official tools available: bash, read, write, edit, apply_patch, glob, grep, list,
+webfetch, websearch, todowrite, skill, lsp, task.
 
-When the task is fully done and tests pass, reply with the word FINISHED.
-Always think step by step. Do not change temperature or invent extra tools.
+Rules:
+- Stay inside the project workspace directory.
+- Keep required element ids/classes exact (tests assert them).
+- Do not leave stub/TODO placeholder pages as the final result.
+- Prefer one complete index.html with embedded CSS/JS for UI tasks when appropriate.
+- Do not ask the user questions — this is an unattended benchmark run.
 """
 
 
@@ -47,9 +51,7 @@ class FrozenConstraints:
     max_tokens: int = 4096
     max_steps: int = 100
     timeout: int = 300
-    memory_limit: str = "2g"
-    cpu_limit: float = 2.0
-    container_image: str = "opencode-model:latest"
+    agent_engine: str = "opencode-ai"
 
     def to_public_dict(self) -> dict[str, Any]:
         """Snapshot safe to store/return (includes full prompt for audit)."""
@@ -61,10 +63,9 @@ class FrozenConstraints:
             f"{self.arena_engine_version}|"
             f"{self.system_prompt_version}|"
             f"{self.tool_protocol_version}|"
+            f"engine={self.agent_engine}|"
             f"t={self.temperature}|tok={self.max_tokens}|"
-            f"steps={self.max_steps}|timeout={self.timeout}|"
-            f"mem={self.memory_limit}|cpu={self.cpu_limit}|"
-            f"img={self.container_image}"
+            f"steps={self.max_steps}|timeout={self.timeout}"
         )
 
 

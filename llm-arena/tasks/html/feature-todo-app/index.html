@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Todo App — incomplete</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; margin: 0; padding: 2rem; }
+    .shell { max-width: 480px; margin: 0 auto; }
+    /* Agent: implement styles for .todo-item, .done, etc. */
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <h1>Todos</h1>
+    <!-- Agent must wire these ids and implement interactions -->
+    <div>
+      <input id="todo-input" type="text" placeholder="What needs doing?" />
+      <button id="todo-add" type="button">Add</button>
+    </div>
+    <p id="todo-empty">No todos yet.</p>
+    <ul id="todo-list"></ul>
+  </div>
+  <script>
+    // TODO: implement add / complete / remove
+  </script>
+</body>
+</html>

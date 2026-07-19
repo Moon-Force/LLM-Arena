@@ -14,6 +14,7 @@ const navItems = computed(() => [
   { name: t('nav.home'), path: '/' },
   { name: t('nav.leaderboard'), path: '/leaderboard' },
   { name: t('nav.arena'), path: '/arena' },
+  { name: t('nav.outputs'), path: '/outputs' },
   { name: t('nav.comparison'), path: '/comparison' },
   { name: t('nav.models'), path: '/models' },
 ])

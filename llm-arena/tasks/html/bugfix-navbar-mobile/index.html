@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Navbar Bug</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, sans-serif; background: #111; color: #eee; }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      background: #1a1a24;
+      border-bottom: 1px solid #333;
+    }
+    #brand { font-weight: 700; letter-spacing: 0.02em; }
+    /* BUG: hamburger always visible; nav never collapses properly */
+    #menu-toggle {
+      display: none; /* wrong on mobile — should show at <=768px */
+      background: transparent;
+      border: 1px solid #555;
+      color: #eee;
+      padding: 0.4rem 0.6rem;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #nav-links {
+      display: flex;
+      gap: 1rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    #nav-links a { color: #cbd5e1; text-decoration: none; }
+    /* Missing media query & menu-open styles */
+  </style>
+</head>
+<body>
+  <header>
+    <div id="brand">Acme</div>
+    <button id="menu-toggle" type="button" aria-label="Toggle menu">Menu</button>
+    <ul id="nav-links">
+      <li><a href="#home">Home</a></li>
+      <li><a href="#product">Product</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </header>
+  <main style="padding: 2rem">
+    <h1>Product page</h1>
+    <p>Fix the mobile navbar behavior.</p>
+  </main>
+  <script>
+    // BUG: toggle does nothing useful
+    document.getElementById('menu-toggle')?.addEventListener('click', () => {
+      console.log('clicked');
+    });
+  </script>
+</body>
+</html>

@@ -6,7 +6,7 @@ import { useArenaStore } from '@/stores/arena'
 import type { LeaderboardType } from '@/types'
 
 const store = useArenaStore()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const activeTab = ref<LeaderboardType>('overall')
 
 const tabs = computed(() => [
@@ -20,7 +20,20 @@ function setActiveTab(type: LeaderboardType) {
   store.setLeaderboardType(type)
 }
 
-onMounted(() => {
+function trackLabel(tr: { id: string; name?: { zh?: string; en?: string } | string }): string {
+  const n = tr.name
+  if (!n) return tr.id
+  if (typeof n === 'string') return n
+  return (locale.value === 'zh' ? n.zh : n.en) || n.zh || n.en || tr.id
+}
+
+function setTrack(trackId: string) {
+  store.setLeaderboardTrack(trackId)
+}
+
+onMounted(async () => {
+  await store.fetchTracks()
+  await store.fetchRuns()
   gsap.from('.leaderboard-header', {
     y: 30,
     opacity: 0,
@@ -74,7 +87,37 @@ function formatNumber(value: number) {
         </p>
       </div>
 
-      <!-- Tabs -->
+      <!-- Track filter: scores only comparable within the same track -->
+      <div class="flex flex-wrap justify-center gap-2 mb-6">
+        <button
+          type="button"
+          class="px-3 py-1.5 rounded-lg text-xs border font-medium"
+          :class="store.selectedLeaderboardTrack === 'all'
+            ? 'border-violet-500/50 bg-violet-500/15 text-violet-200'
+            : 'border-kimi-border text-kimi-muted hover:text-kimi-text'"
+          @click="setTrack('all')"
+        >
+          {{ t('tracks.all') }}
+        </button>
+        <button
+          v-for="tr in store.tracks.filter(x => x.enabled || (x.task_count || 0) > 0)"
+          :key="tr.id"
+          type="button"
+          class="px-3 py-1.5 rounded-lg text-xs border font-medium"
+          :class="store.selectedLeaderboardTrack === tr.id
+            ? 'border-violet-500/50 bg-violet-500/15 text-violet-200'
+            : 'border-kimi-border text-kimi-muted hover:text-kimi-text'"
+          @click="setTrack(tr.id)"
+        >
+          {{ trackLabel(tr) }}
+          <span v-if="tr.task_count != null" class="opacity-60 ml-1">{{ tr.task_count }}</span>
+        </button>
+      </div>
+      <p class="text-center text-[11px] text-kimi-muted mb-8 max-w-xl mx-auto">
+        {{ t('leaderboard.byTrackHint') }}
+      </p>
+
+      <!-- Score-type Tabs -->
       <div class="flex justify-center mb-10">
         <div class="inline-flex bg-kimi-surface rounded-xl p-1 border border-kimi-border">
           <button

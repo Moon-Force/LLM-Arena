@@ -47,7 +47,7 @@ function start_frontend() {
         npm install
     fi
 
-    echo -e "${GREEN}前端运行在 http://localhost:5173${NC}"
+    echo -e "${GREEN}前端运行在 http://127.0.0.1:3000${NC}"
     npm run dev
 }
 
@@ -74,19 +74,24 @@ function start_backend() {
 }
 
 function start_full() {
-    echo -e "${YELLOW}Docker 完整部署...${NC}"
+    echo -e "${YELLOW}Docker 部署 (API + Redis；Agent = 官方 opencode-ai)...${NC}"
     check_command docker
-    check_command docker-compose
+    check_command docker-compose || check_command docker
 
     if [ ! -f ".env" ]; then
         echo -e "${YELLOW}警告: 未找到 .env 文件，使用默认配置${NC}"
         echo -e "${YELLOW}请复制 .env.example 为 .env 并填入 API 密钥${NC}"
     fi
 
-    docker-compose up -d --build
+    if [ ! -d "node_modules/opencode-ai" ]; then
+        echo -e "${BLUE}安装 opencode-ai...${NC}"
+        npm install
+    fi
+
+    docker compose up -d --build
 
     echo -e "${GREEN}服务已启动！${NC}"
-    echo -e "${GREEN}前端: http://localhost:5173${NC}"
+    echo -e "${GREEN}Agent: 官方 opencode-ai (opencode serve)${NC}"
     echo -e "${GREEN}后端 API: http://localhost:8000${NC}"
     echo -e "${GREEN}API 文档: http://localhost:8000/docs${NC}"
 }

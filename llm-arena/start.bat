@@ -82,7 +82,7 @@ if not exist "node_modules" (
     call npm install
 )
 
-echo %GREEN%前端运行在 http://localhost:5173%NC%
+echo %GREEN%前端运行在 http://127.0.0.1:3000%NC%
 call npm run dev
 goto :eof
 
@@ -111,7 +111,7 @@ python -m opencode.api.server
 goto :eof
 
 :start_full
-echo %YELLOW%Docker 完整部署...%NC%
+echo %YELLOW%Docker 部署 (API + Redis；Agent = 官方 opencode-ai)...%NC%
 
 :: 检查 .env 文件
 if not exist ".env" (
@@ -119,16 +119,21 @@ if not exist ".env" (
     echo %YELLOW%请复制 .env.example 为 .env 并填入 API 密钥%NC%
 )
 
-:: 构建并启动
-docker-compose up -d --build
+:: 确保官方 OpenCode 已安装
+if not exist "node_modules\opencode-ai" (
+    echo %BLUE%安装 opencode-ai...%NC%
+    call npm install
+)
+
+docker compose up -d --build
 
 echo %GREEN%服务已启动！%NC%
-echo %GREEN%前端: http://localhost:5173%NC%
+echo %GREEN%Agent: 官方 opencode-ai (opencode serve)%NC%
 echo %GREEN%后端 API: http://localhost:8000%NC%
 echo %GREEN%API 文档: http://localhost:8000/docs%NC%
 echo.
-echo %BLUE%查看日志: docker-compose logs -f%NC%
-echo %BLUE%停止服务: docker-compose down%NC%
+echo %BLUE%查看日志: docker compose logs -f%NC%
+echo %BLUE%停止服务: docker compose down%NC%
 goto :eof
 
 :build_prod

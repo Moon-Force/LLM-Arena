@@ -3,8 +3,28 @@
     "home": "Home",
     "leaderboard": "Leaderboard",
     "arena": "Arena",
+    "outputs": "Outputs",
     "comparison": "Comparison",
     "models": "Models"
+  },
+  "outputs": {
+    "title": "Agent Outputs",
+    "subtitle": "Side-by-side view of each agent's isolated workspace — code and HTML page previews.",
+    "refresh": "Refresh",
+    "batches": "Match batches",
+    "empty": "No workspaces yet. Run a fair match in the Arena first.",
+    "selectAll": "Select batch",
+    "selectHint": "Compare up to 4 agents at once. You can delete individual or selected outputs.",
+    "pickAgents": "Select agents on the left to browse their generated files and pages.",
+    "noFile": "No file selected",
+    "delete": "Delete",
+    "deleteSelected": "Delete selected",
+    "deleteBatch": "Delete batch",
+    "confirmDelete": "Delete this agent output? This cannot be undone.",
+    "confirmDeleteSelected": "Delete {n} selected agent outputs? This cannot be undone.",
+    "confirmDeleteBatch": "Delete all outputs in this batch? This cannot be undone.",
+    "deleting": "Deleting…",
+    "deleteFailed": "Delete failed"
   },
   "hero": {
     "badge": "OpenCode Arena",
@@ -62,7 +82,14 @@
     "saveChanges": "Save Changes",
     "cancel": "Cancel",
     "confirmDelete": "Are you sure you want to delete this model?",
-    "resetDefaults": "Reset to Defaults"
+    "resetDefaults": "Reset to Defaults",
+    "envSyncHint": "Two-way sync with server .env: pull / push API keys.",
+    "pullFromEnv": "Pull from .env",
+    "pushToEnv": "Push to .env",
+    "pulledFromEnv": "Pulled keys for {n} providers from .env",
+    "pushedToEnv": "Wrote to .env: {keys}",
+    "savedAndEnv": "Saved in browser and synced to .env",
+    "savedLocalOnly": "Saved in browser only (.env sync failed — is the API up?)"
   },
   "cta": {
     "title": "Ready to",
@@ -71,7 +98,8 @@
   },
   "leaderboard": {
     "title": "Leaderboard",
-    "subtitle": "Compare model performance across multiple dimensions",
+    "subtitle": "Compare models by eval track (tools & constraints frozen within a track)",
+    "byTrackHint": "Scores are only comparable within the same track (single-variable principle).",
     "tabs": {
       "overall": "Overall",
       "accuracy": "Accuracy",
@@ -90,6 +118,12 @@
       "score": "Score"
     }
   },
+  "tracks": {
+    "label": "Eval track",
+    "all": "All",
+    "empty": "No tasks in this track yet",
+    "beta": "Coming soon"
+  },
   "arena": {
     "title": "Arena",
     "subtitle": "Fair multi-model comparison under frozen constraints (single-variable principle)",
@@ -99,16 +133,37 @@
     "selectModelsHint": "Pick at least 2 models. Temperature, steps, and system prompt are frozen; only model + API credentials differ.",
     "selectedCount": "{n} models selected",
     "selectTask": "Select Task",
+    "selectTrack": "Select eval track",
+    "trackHint": "Tracks partition the task pool only; within a track, tools and frozen knobs are identical — only model/API differ.",
     "parallel": "Run models in parallel",
     "singleVariable": "Single-variable principle",
-    "singleVariableHint": "Same task, tools, system prompt, and decoding knobs; only model and API key/base URL change.",
+    "singleVariableHint": "Same track, task, tools, system prompt, and decoding knobs; only model and API key/base URL change.",
     "startRun": "Start Fair Match",
     "running": "Running...",
     "recentRuns": "Recent Runs",
     "noRuns": "No runs yet. Select at least 2 models and a task to start.",
     "passRate": "Pass Rate",
     "tokens": "Tokens",
-    "duration": "Duration"
+    "inputTokens": "Input tokens (prompt)",
+    "outputTokens": "Output tokens (completion)",
+    "matchBoard": "Match board",
+    "tabPage": "Page",
+    "tabLog": "OpenCode log",
+    "tabSteps": "Steps",
+    "tabTerminal": "OpenCode dialogue",
+    "terminalEmpty": "After a match, each agent's OpenCode terminal dialogue appears here side-by-side",
+    "terminalEmptyHint": "Pick ≥2 models + a task, start a fair match. You'll see thinking, tool calls, and observations.",
+    "noHtml": "No HTML page (check log/steps for non-UI tasks)",
+    "noLog": "No OpenCode log yet",
+    "noSteps": "No step transcript (container path may omit steps)",
+    "stubWarning": "Looks like a scaffold page — re-run or inspect the OpenCode log.",
+    "duration": "Duration",
+    "opencodeTools": "Official OpenCode tools",
+    "opencodeToolsHint": "Every contestant gets the same frozen official tool set",
+    "opencodeToolsEnabled": "{n} enabled",
+    "opencodeToolsDenied": "{n} denied",
+    "toolAllow": "allow",
+    "toolDeny": "deny"
   },
   "comparison": {
     "title": "Comparison",

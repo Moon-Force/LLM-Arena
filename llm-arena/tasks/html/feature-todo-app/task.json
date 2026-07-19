@@ -1,0 +1,20 @@
+{
+  "id": "feature-todo-app",
+  "name": "Interactive Todo App",
+  "description": "Implement a small interactive Todo utility (FrontendBench-style interaction). In index.html (+ optional app.js/styles.css): (1) input id todo-input and button id todo-add; (2) list id todo-list; (3) adding creates <li class=\"todo-item\"> with the text and a complete control (button or checkbox with class todo-complete); (4) completing toggles class done on the item; (5) each item has remove control class todo-remove that deletes the item; (6) empty-state element id todo-empty visible when list has 0 items. Use vanilla JS (no frameworks). Persist is optional. Reply FINISHED when interactive behavior is implemented.",
+  "language": "html",
+  "type": "feature",
+  "difficulty": "medium",
+  "test_cases": 9,
+  "expected_files": [
+    "index.html"
+  ],
+  "hidden_tests": [
+    {
+      "name": "test_interaction_hooks",
+      "description": "Required ids/classes for add/complete/remove"
+    }
+  ],
+  "source": "Inspired by FrontendBench L3 interactive utilities / mini apps.",
+  "track": "frontend"
+}

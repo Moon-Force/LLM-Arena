@@ -1,0 +1,41 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Backend: OpenCode API",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "opencode.api.server",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "PYTHONUNBUFFERED": "1"
+      },
+      "windows": {
+        "python": "${workspaceFolder}/venv/Scripts/python.exe"
+      },
+      "linux": {
+        "python": "${workspaceFolder}/venv/bin/python"
+      },
+      "osx": {
+        "python": "${workspaceFolder}/venv/bin/python"
+      }
+    },
+    {
+      "name": "Frontend: Vite",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npx vite --host 127.0.0.1 --port 3000",
+      "cwd": "${workspaceFolder}"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "🚀 LLM Arena (Full Stack)",
+      "configurations": ["Backend: OpenCode API", "Frontend: Vite"],
+      "stopAll": true
+    }
+  ]
+}

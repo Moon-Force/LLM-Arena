@@ -1,0 +1,24 @@
+{
+  "id": "algorithm-max-flow",
+  "name": "Maximum Flow (Competitive Programming Hard)",
+  "description": "Implement maximum flow on a directed graph (LiveCodeBench / Codeforces Hard style).\n\n## API\n\nImplement in `max_flow.py`:\n\n```python\ndef max_flow(n: int, edges: list[tuple[int, int, int]], source: int, sink: int) -> int:\n    \"\"\"Return the maximum flow from source to sink.\n\n    Args:\n        n: number of nodes, labeled 0 .. n-1\n        edges: list of (u, v, capacity) directed edges. Multiple edges between\n               the same pair are allowed and MUST be treated as parallel\n               (sum capacities / separate residual slots).\n        source: source node\n        sink: sink node\n\n    Returns:\n        Maximum flow as a non-negative int. If source == sink, return 0.\n    \"\"\"\n```\n\n## Rules\n\n- Capacities are non-negative integers (may be 0).\n- Graph may be disconnected; nodes may be unreachable.\n- Use any correct algorithm (Edmonds–Karp, Dinic, Push-relabel, …).\n  Graphs in tests go up to ~200 nodes / ~2000 edges — O(V²E) may fail timeouts on dense cases; prefer Dinic or better.\n- Do **not** fetch solutions from the web; implement yourself.\n- Integer arithmetic only; no floating point for residual capacities.\n\n## Small example\n\n```\nn=4\nedges=[(0,1,3),(0,2,2),(1,2,5),(1,3,2),(2,3,3)]\nsource=0, sink=3\nmax_flow → 5\n```",
+  "language": "python",
+  "type": "algorithm",
+  "difficulty": "hard",
+  "test_cases": 10,
+  "expected_files": [
+    "max_flow.py",
+    "test_max_flow.py"
+  ],
+  "hidden_tests": [
+    {
+      "name": "test_random_graphs_match_reference",
+      "description": "Random graphs vs Edmonds-Karp reference"
+    },
+    {
+      "name": "test_dense_graph",
+      "description": "Larger bipartite-like network"
+    }
+  ],
+  "track": "algorithm"
+}

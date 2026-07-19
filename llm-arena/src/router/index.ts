@@ -4,6 +4,7 @@ import LeaderboardView from '../views/LeaderboardView.vue'
 import ArenaView from '../views/ArenaView.vue'
 import ComparisonView from '../views/ComparisonView.vue'
 import ModelConfigView from '../views/ModelConfigView.vue'
+import OutputsView from '../views/OutputsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -27,6 +28,11 @@ const router = createRouter({
       path: '/comparison',
       name: 'comparison',
       component: ComparisonView,
+    },
+    {
+      path: '/outputs',
+      name: 'outputs',
+      component: OutputsView,
     },
     {
       path: '/models',

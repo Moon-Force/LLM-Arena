@@ -1,0 +1,28 @@
+{
+  "id": "feature-kanban-board",
+  "name": "Interactive Kanban Board",
+  "description": "Build an interactive **Kanban board** for a product team (dense app UI, not marketing). Vanilla HTML/CSS/JS; Google Fonts OK; no frameworks.\n\n## Product\nBoard title **Sprint Board**. Columns: Backlog → In Progress → Review → Done.\n\n## Required DOM\n1. App header `#board-header` with title `#board-title` text matching /Sprint Board/i, and button `#btn-add-card` (Add card).\n2. Board `#kanban-board` with exactly 4 columns `.kanban-column` with `data-column` in {backlog, progress, review, done}.\n3. Each column has: `.column-header`, `.column-title`, count badge `.column-count`, and cards container `.column-cards` with a unique id: `#col-backlog` `#col-progress` `#col-review` `#col-done`.\n4. Seed ≥6 cards `.kanban-card` distributed across columns. Each card needs:\n   - unique `data-card-id`\n   - `.card-title`\n   - `.card-meta` (assignee or tag text)\n   - priority pill `.card-priority` with data-priority in {low,med,high} OR class priority-low|priority-med|priority-high\n   - button `.card-move-next` (move to next column) and optional `.card-delete`\n5. New-card form `#new-card-form` (can be in a modal `#new-card-modal` or inline panel): inputs `#new-card-title` `#new-card-assignee`, select `#new-card-priority`, buttons `#new-card-cancel` `#new-card-submit`.\n6. Live filter `#filter-priority` (All/Low/Med/High) hiding non-matching cards.\n7. Empty column state: when a column has 0 visible cards, show `.column-empty` inside that column (or toggle visibility).\n\n## Behavior\n- `#btn-add-card` reveals form/modal; submit creates a card in **Backlog** with classes above and increments counts.\n- `.card-move-next` moves card to the next column in order backlog→progress→review→done; on Done, either disable move or cycle stops.\n- Update `.column-count` to reflect card counts after add/move/delete.\n- `#filter-priority` filters cards without destroying them.\n- Optional: HTML5 drag-and-drop between `.column-cards` is a plus but not required if move buttons work.\n\n## Visual\nCompact product board: column backgrounds, card elevation, priority colors. CSS variables. Works on desktop width ≥1000px; horizontal scroll OK on small screens (`#kanban-board` overflow-x auto).\n\nReply FINISHED when add/move/filter and counts work.",
+  "language": "html",
+  "type": "feature",
+  "difficulty": "hard",
+  "test_cases": 12,
+  "expected_files": [
+    "index.html"
+  ],
+  "hidden_tests": [
+    {
+      "name": "test_columns",
+      "description": "4 columns with data-column + col ids"
+    },
+    {
+      "name": "test_cards_seed",
+      "description": "≥6 cards with title/priority/move"
+    },
+    {
+      "name": "test_js_interactions",
+      "description": "Add form + move + filter hooks"
+    }
+  ],
+  "source": "Common coding-agent interactive UI tasks (kanban/project board) + FrontendBench L3 interaction density + product dashboard patterns (Refero-style).",
+  "track": "frontend"
+}

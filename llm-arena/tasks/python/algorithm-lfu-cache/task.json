@@ -1,0 +1,24 @@
+{
+  "id": "algorithm-lfu-cache",
+  "name": "O(1) LFU Cache",
+  "description": "Implement an LFU (Least Frequently Used) cache with the following API.\n\n## Spec (LeetCode 460 style, Hard)\n\n- `LFUCache(capacity: int)` — construct a cache that holds at most `capacity` key-value pairs. Capacity is non-negative. If capacity is 0, every `put` is a no-op and every `get` returns -1.\n- `get(key: int) -> int` — return the value if the key exists, otherwise -1. A successful get **increments** the key's frequency by 1.\n- `put(key: int, value: int) -> None` — insert or update. If the key already exists, update its value and **increment** frequency by 1. If inserting a new key would exceed capacity, **evict** one key first:\n  1. Evict among keys with the **smallest frequency**.\n  2. If several share that frequency, evict the **least recently used** among them (LRU within the same frequency).\n  Then insert the new key with frequency 1.\n\n## Constraints\n\n- Prefer amortized O(1) for get/put (not required for correctness tests, but naive O(n) may time out on large sequences).\n- Do **not** use network tools; solve from the spec alone.\n- Implement everything in `lfu_cache.py`. Keep the public class name `LFUCache` and methods `get` / `put`.\n\n## Examples\n\n```\ncache = LFUCache(2)\ncache.put(1, 1)\ncache.put(2, 2)\ncache.get(1)      # 1, freq(1)=2\ncache.put(3, 3)   # evicts key 2 (freq 1, older)\ncache.get(2)      # -1\ncache.get(3)      # 3\ncache.put(4, 4)   # evicts key 1? wait: freq(1)=2, freq(3)=2 after get — actually after get(3) both 1 and 3 have freq 2; put(4) needs room: after put(3), keys={1:freq2, 3:freq1}; get(2)=-1; get(3) -> 3 freq2; put(4) evicts min-freq key 3? No keys 1(freq2) and 3(freq2). After put(3): {1:f2, 3:f1}. get(2)=-1. get(3)=3 -> {1:f2, 3:f2}. put(4): capacity full, both freq 2, LRU among them is key 1 (3 was more recently used by get). Evict 1. {3:f2, 4:f1}.\n```\n\nFollow the eviction rules carefully; edge cases include capacity 0, update existing keys, and multi-key same-frequency ties.",
+  "language": "python",
+  "type": "algorithm",
+  "difficulty": "hard",
+  "test_cases": 12,
+  "expected_files": [
+    "lfu_cache.py",
+    "test_lfu_cache.py"
+  ],
+  "hidden_tests": [
+    {
+      "name": "test_large_sequence_correctness",
+      "description": "Long mixed get/put sequence with many same-frequency ties"
+    },
+    {
+      "name": "test_capacity_zero",
+      "description": "Capacity 0 never stores"
+    }
+  ],
+  "track": "algorithm"
+}

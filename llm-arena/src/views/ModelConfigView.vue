@@ -1,11 +1,48 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useArenaStore } from '@/stores/arena'
 import type { Model, ModelProvider } from '@/types'
 
 const store = useArenaStore()
 const { t } = useI18n()
+const syncing = ref(false)
+const syncMsg = ref<string | null>(null)
+
+onMounted(async () => {
+  try {
+    await store.syncKeysFromEnv()
+  } catch {
+    // backend offline — keep localStorage keys
+  }
+})
+
+async function pullFromEnv() {
+  syncing.value = true
+  syncMsg.value = null
+  try {
+    const r = await store.syncKeysFromEnv()
+    const n = Object.values(r.providers || {}).filter((p: { has_key?: boolean }) => p.has_key).length
+    syncMsg.value = t('modelConfig.pulledFromEnv', { n })
+  } catch (e) {
+    syncMsg.value = e instanceof Error ? e.message : 'Pull failed'
+  } finally {
+    syncing.value = false
+  }
+}
+
+async function pushToEnv() {
+  syncing.value = true
+  syncMsg.value = null
+  try {
+    const r = await store.syncKeysToEnv()
+    syncMsg.value = t('modelConfig.pushedToEnv', { keys: (r.updated_keys || []).join(', ') })
+  } catch (e) {
+    syncMsg.value = e instanceof Error ? e.message : 'Push failed'
+  } finally {
+    syncing.value = false
+  }
+}
 
 // Dialog state
 const showAddDialog = ref(false)
@@ -73,7 +110,7 @@ function openEditDialog(model: Model) {
   showEditDialog.value = true
 }
 
-function saveModel() {
+async function saveModel() {
   if (!form.value.name || !form.value.version) return
 
   const modelData = {
@@ -93,6 +130,16 @@ function saveModel() {
     store.updateModel(editingModel.value.id, modelData)
   } else {
     store.addModel(modelData)
+  }
+
+  // Also write this provider's key to .env when present
+  if (form.value.apiKey || form.value.baseUrl) {
+    try {
+      await store.syncKeysToEnv()
+      syncMsg.value = t('modelConfig.savedAndEnv')
+    } catch {
+      syncMsg.value = t('modelConfig.savedLocalOnly')
+    }
   }
 
   showAddDialog.value = false
@@ -120,21 +167,41 @@ function getProviderName(providerId: string): string {
   <div class="min-h-screen py-24 px-6">
     <div class="max-w-7xl mx-auto">
       <!-- Header -->
-      <div class="flex items-center justify-between mb-12">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <h1 class="text-4xl md:text-5xl font-bold mb-4">
-            <span class="gradient-text">Model Configuration</span>
+            <span class="gradient-text">{{ t('modelConfig.title') }}</span>
           </h1>
           <p class="text-kimi-muted text-lg">
-            Manage and configure LLM models for the arena
+            {{ t('modelConfig.subtitle') }}
           </p>
+          <p class="text-xs text-kimi-muted mt-2">{{ t('modelConfig.envSyncHint') }}</p>
+          <p v-if="syncMsg" class="text-sm text-emerald-400 mt-2">{{ syncMsg }}</p>
         </div>
-        <button class="btn-primary flex items-center gap-2" @click="openAddDialog">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-          Add Model
-        </button>
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            class="px-4 py-2 rounded-xl border border-kimi-border text-sm text-kimi-text hover:bg-kimi-surface disabled:opacity-50"
+            :disabled="syncing"
+            @click="pullFromEnv"
+          >
+            {{ t('modelConfig.pullFromEnv') }}
+          </button>
+          <button
+            type="button"
+            class="px-4 py-2 rounded-xl border border-kimi-border text-sm text-kimi-text hover:bg-kimi-surface disabled:opacity-50"
+            :disabled="syncing"
+            @click="pushToEnv"
+          >
+            {{ t('modelConfig.pushToEnv') }}
+          </button>
+          <button class="btn-primary flex items-center gap-2" type="button" @click="openAddDialog">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            {{ t('modelConfig.addModel') }}
+          </button>
+        </div>
       </div>
 
       <!-- Models Grid -->
