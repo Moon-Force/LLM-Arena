@@ -1,0 +1,14 @@
+{
+  "id": "bugfix-form-a11y",
+  "name": "Accessible Contact Form Fix",
+  "description": "Fix accessibility issues in a contact form (frontend quality rubric: a11y). index.html form id contact-form has unlabeled inputs and poor semantics. Requirements: (1) every input/select/textarea must have an associated <label for=\"...\"> matching id; (2) required fields email and message must use required attribute and aria-required=\"true\"; (3) error region id form-error with role=\"alert\" and aria-live=\"polite\" (hidden until error); (4) submit button type=\"submit\" id form-submit; (5) on submit, if email empty or invalid, prevent default and show error text in #form-error; (6) focus styles visible (outline or box-shadow on :focus-visible). Keep field ids name, email, message. FINISHED when fixed.",
+  "language": "html",
+  "type": "bugfix",
+  "difficulty": "medium",
+  "test_cases": 8,
+  "expected_files": [
+    "index.html"
+  ],
+  "source": "Inspired by frontend a11y review checklists & form interaction benchmarks.",
+  "track": "frontend"
+}

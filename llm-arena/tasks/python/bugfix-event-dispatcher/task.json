@@ -1,0 +1,26 @@
+{
+  "id": "bugfix-event-dispatcher",
+  "name": "Event Dispatcher Race & Filter Bugs",
+  "description": "Hard multi-file bugfix (SWE-bench style, reduced fixture).\n\nA mini event bus is split across three modules. Several subtle correctness bugs cause tests to fail. Fix them without rewriting the whole design.\n\n## Modules\n\n- `event_store.py` — append-only event log with sequence numbers\n- `subscription.py` — subscription registry with topic patterns and filters\n- `dispatcher.py` — delivers events to matching subscribers with retry policy\n\n## Required behavior (tests are the source of truth)\n\n1. **Append & seq**: each published event gets a monotonic `seq` starting at 1.\n2. **Topic match**: patterns support exact topic and single-segment wildcard `*` (e.g. `user.*` matches `user.created` but not `user.profile.updated`).\n3. **Filters**: optional predicate `filter_fn(event) -> bool`. Only deliver when True. Exceptions in filter must be treated as non-match (skip), not crash.\n4. **Ordering**: for a single subscriber, deliveries must be in increasing `seq` order.\n5. **At-most-once per sub+seq**: never deliver the same `(subscription_id, seq)` twice even if `publish` is retried.\n6. **Retry**: if handler raises, retry up to `max_retries` (default 2 extra attempts → 3 total). After exhaustion, record failure via `dispatcher.dead_letters` and continue.\n7. **Unsubscribe**: after unsubscribe, no further deliveries.\n8. **Wildcard edge**: `*` alone matches any single-segment topic; multi-segment topics only match multi-segment patterns with the same number of segments.\n\n## Constraints\n\n- Keep public APIs: `EventStore`, `SubscriptionRegistry`, `Dispatcher`.\n- Prefer minimal patches; do not delete the module structure.\n- Run `python -m pytest -v --tb=short` until green.",
+  "language": "python",
+  "type": "bugfix",
+  "difficulty": "hard",
+  "test_cases": 14,
+  "expected_files": [
+    "event_store.py",
+    "subscription.py",
+    "dispatcher.py",
+    "test_dispatcher.py"
+  ],
+  "hidden_tests": [
+    {
+      "name": "test_idempotent_republish",
+      "description": "Same seq never double-delivered"
+    },
+    {
+      "name": "test_filter_exception_skipped",
+      "description": "Filter exceptions do not abort dispatch"
+    }
+  ],
+  "track": "bugfix"
+}

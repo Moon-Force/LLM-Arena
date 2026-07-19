@@ -1,0 +1,7 @@
+/* Intentionally minimal — design tokens live in main.css (Colosseum Protocol). */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}

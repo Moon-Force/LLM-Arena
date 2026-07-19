@@ -1,0 +1,24 @@
+{
+  "id": "feature-mvcc-store",
+  "name": "MVCC Key-Value Store",
+  "description": "Hard feature task (FeatureBench-style): implement a multi-version concurrency control (MVCC) in-memory key-value store from a stub API.\n\n## File\n\nImplement class `MVCCStore` in `mvcc_store.py`.\n\n## Semantics\n\n### Versions & snapshots\n- The store keeps a global logical clock `commit_ts` starting at 0.\n- Each successful **commit** increments `commit_ts` by 1 and stamps all writes in that transaction with that commit timestamp.\n- `begin()` returns a `Transaction` with a snapshot timestamp `read_ts` equal to the current `commit_ts` at begin time (see committed data only with `version <= read_ts`).\n\n### Transaction API\n```python\nclass Transaction:\n    def get(self, key: str) -> str | None: ...\n    def put(self, key: str, value: str) -> None: ...\n    def delete(self, key: str) -> None: ...\n    def commit(self) -> int:  # returns commit_ts; raises WriteConflict on conflict\n    def abort(self) -> None: ...\n```\n\n### Isolation (snapshot + first-committer-wins)\n1. `get(key)` returns the latest version of `key` with `commit_ts <= txn.read_ts` that is not a delete tombstone. Uncommitted writes of **this** transaction are visible to itself (read-your-writes).\n2. `put` / `delete` stage writes in the transaction buffer (not global until commit).\n3. On `commit`:\n   - For every key written in this txn, if any **other** transaction has committed a version with `commit_ts > txn.read_ts` for that key, raise `WriteConflict`.\n   - Otherwise assign new `commit_ts = store.commit_ts + 1`, install all buffered writes (puts and deletes as tombstones), update store clock, return the new `commit_ts`.\n4. `abort` discards the buffer; further ops on that txn raise `TransactionClosed`.\n5. After commit or abort, further get/put/delete/commit raise `TransactionClosed`.\n\n### Store API\n```python\nclass MVCCStore:\n    def begin(self) -> Transaction: ...\n    def commit_ts(self) -> int:  # property or method: current global commit clock\n    def gc(self, before_ts: int) -> int:\n        \"\"\"Drop versions with commit_ts < before_ts that are not needed\n        as the latest version <= any possible snapshot. Simple rule for tests:\n        remove any version with commit_ts < before_ts if there exists a newer\n        version of the same key with commit_ts < before_ts as well, OR if it is\n        a tombstone with commit_ts < before_ts and a newer version exists.\n        Actually tests only require: after gc(before_ts), no version with\n        commit_ts < before_ts remains UNLESS it is the newest version overall\n        for that key (keep at least one version per key if any). Return number of version records removed.\n        \"\"\"\n```\n\nClarify `gc` for tests:\n- For each key, keep all versions with `commit_ts >= before_ts`.\n- Also keep the single latest version with `commit_ts < before_ts` if it exists (so old snapshots before before_ts are not required; only need latest older version).\n- Remove all other older versions. Return count of removed version records.\n\n### Exceptions\n```python\nclass WriteConflict(Exception): ...\nclass TransactionClosed(Exception): ...\n```\n\n## Constraints\n- Pure Python, no external DB.\n- Thread-safety not required.\n- Run pytest until all tests pass.",
+  "language": "python",
+  "type": "feature",
+  "difficulty": "hard",
+  "test_cases": 12,
+  "expected_files": [
+    "mvcc_store.py",
+    "test_mvcc_store.py"
+  ],
+  "hidden_tests": [
+    {
+      "name": "test_write_conflict_on_concurrent_keys",
+      "description": "First committer wins on overlapping keys"
+    },
+    {
+      "name": "test_gc_keeps_latest_old_version",
+      "description": "GC retention policy"
+    }
+  ],
+  "track": "feature"
+}

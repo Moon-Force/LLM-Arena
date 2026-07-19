@@ -1,0 +1,24 @@
+{
+  "id": "feature-landing-hero",
+  "name": "Landing Hero Page",
+  "description": "Build a single-file marketing landing page (FrontendBench-style static UI). Create index.html that includes: (1) a sticky header with logo text 'NovaDesk' and nav links Features, Pricing, Docs (use ids nav-features, nav-pricing, nav-docs); (2) a hero section with id hero containing an h1, a subtitle p, and a primary CTA button id cta-primary with text matching /Get started|Start free|Try free/i; (3) a features grid id features-grid with at least 3 feature cards (.feature-card) each with h3 and p; (4) a footer id site-footer. Use modern CSS (flex/grid), dark theme, responsive layout. Prefer one index.html with embedded <style> and optional <script>, or index.html + styles.css. Do NOT use external CDNs except fonts. When done, reply FINISHED.",
+  "language": "html",
+  "type": "feature",
+  "difficulty": "easy",
+  "test_cases": 8,
+  "expected_files": [
+    "index.html"
+  ],
+  "hidden_tests": [
+    {
+      "name": "test_semantic_structure",
+      "description": "Required landmark ids and CTA"
+    },
+    {
+      "name": "test_feature_cards",
+      "description": "At least 3 feature cards"
+    }
+  ],
+  "source": "Inspired by FrontendBench L1 static pages & frontend agent rubrics (landing / marketing UI).",
+  "track": "frontend"
+}

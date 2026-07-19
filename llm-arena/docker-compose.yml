@@ -1,0 +1,43 @@
+# OpenCode Arena — infrastructure only (API + Redis)
+#
+# Agents run via official opencode-ai (`opencode serve`) on the API host.
+# No per-model containers / self-built agent images.
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: opencode-api
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENCODE_ENV=production
+      - OPENCODE_MAX_STEPS=100
+      - OPENCODE_TIMEOUT=300
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=sqlite:///data/opencode.db
+    volumes:
+      - ./data:/data
+      - ./tasks:/app/tasks:ro
+    depends_on:
+      - redis
+    networks:
+      - opencode-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: opencode-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - opencode-network
+
+volumes:
+  redis-data:
+
+networks:
+  opencode-network:
+    driver: bridge

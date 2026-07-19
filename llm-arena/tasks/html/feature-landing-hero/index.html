@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NovaDesk</title>
+  <style>
+    :root {
+      --bg: #07070c;
+      --card: #12121a;
+      --text: #e8eaf0;
+      --muted: #94a3b8;
+      --accent: #6366f1;
+      --accent2: #22d3ee;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, sans-serif;
+      background: radial-gradient(1200px 600px at 20% -10%, #1e1b4b55, transparent),
+                  var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    /* TODO agent: complete header#site-header, #hero, #features-grid, #site-footer
+       Required ids: nav-features, nav-pricing, nav-docs, hero, cta-primary, features-grid, site-footer
+       Required classes: feature-card (x3+)
+       Brand text: NovaDesk
+       CTA text: Get started / Start free / Try free
+    */
+    .hint {
+      max-width: 720px;
+      margin: 3rem auto;
+      padding: 1.5rem;
+      border: 1px dashed #334155;
+      border-radius: 16px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="hint">
+    <p><strong>Scaffold only.</strong> Replace this page with a full NovaDesk landing (header + hero + 3 feature cards + footer).</p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "id": "feature-saas-landing-pro",
+  "name": "SaaS Landing (Aesthetics + Multi-section)",
+  "description": "Build a COMPLETE multi-section SaaS marketing site for a fictional product **OrbitFlow** (AI project management for remote teams). Single-file or index.html + styles.css + app.js. Vanilla HTML/CSS/JS only; Google Fonts allowed; NO other CDNs / React / Tailwind CDN.\n\n## Product brief\nTagline must convey: ship faster with AI-assisted planning. Primary CTA copy must match /Start free|Get started|Try free|Book demo/i.\n\n## Required DOM contract (ids / classes)\n1. Sticky header `#site-header` with brand text **OrbitFlow**, nav links `#nav-product` `#nav-pricing` `#nav-customers` `#nav-docs`, and header CTA `#header-cta`.\n2. Hero `#hero` with eyebrow `#hero-eyebrow`, `h1#hero-title`, subtitle `#hero-subtitle`, primary button `#cta-primary`, secondary button `#cta-secondary` (e.g. Watch demo).\n3. Logo cloud `#logo-cloud` with ≥4 `.logo-item` (can be text brands).\n4. Features `#features` with grid `#features-grid` and ≥6 `.feature-card` each containing `h3` + `p` and optional icon.\n5. How-it-works `#how-it-works` with ≥3 ordered steps `.step-item` each with `.step-number` and `.step-title`.\n6. Social proof `#testimonials` with ≥3 `.testimonial-card` (quote + author name + role).\n7. Pricing `#pricing` with toggle `#billing-toggle` switching monthly/yearly (data-billing on `#pricing` or body class `billing-yearly`), and exactly 3 `.plan-card` with `data-plan` in {starter,pro,enterprise}, each with `.plan-price` and `.plan-cta`.\n8. FAQ `#faq` with ≥4 `.faq-item` (button/summary + answer panel); at least one can expand/collapse via JS or details/summary.\n9. Final CTA band `#final-cta` with button `#final-cta-btn`.\n10. Footer `#site-footer` with ≥3 footer link groups `.footer-col`.\n\n## Aesthetics (anti-slop — inspired by Anthropic frontend-aesthetics cookbook)\n- Commit to a distinctive palette via CSS variables (`--bg`, `--fg`, `--accent`, …). Avoid purple-on-white AI-default gradients and Inter/Roboto-only stacks.\n- Use a display + body font pairing (load from Google Fonts if needed).\n- Dark OR light is fine; must feel intentional. Include hover states and visible `:focus-visible`.\n- Responsive: usable at ≤480px (hamburger `#menu-toggle` may collapse nav).\n- Prefer CSS animations for hero entrance or staggered feature cards (respect prefers-reduced-motion).\n\n## Acceptance\nWhen structure + interactions (billing toggle and at least FAQ expand OR mobile menu) work, reply FINISHED.",
+  "language": "html",
+  "type": "feature",
+  "difficulty": "hard",
+  "test_cases": 14,
+  "expected_files": [
+    "index.html"
+  ],
+  "hidden_tests": [
+    {
+      "name": "test_header_contract",
+      "description": "Header brand + nav ids + CTA"
+    },
+    {
+      "name": "test_sections_dense",
+      "description": "Hero, features×6, pricing×3, faq×4, footer"
+    },
+    {
+      "name": "test_billing_toggle_hook",
+      "description": "Billing toggle + plan cards data-plan"
+    }
+  ],
+  "source": "Claude Cookbook: Prompting for frontend aesthetics (SaaS landing) + FrontendBench multi-section marketing pages + Anthropic frontend-design skill (anti-templated UI).",
+  "track": "frontend"
+}

@@ -1,0 +1,24 @@
+{
+  "id": "algorithm-rk4-orbit",
+  "name": "RK4 Two-Body Orbit (SciCode style)",
+  "description": "Scientific coding task (SciCode-style): implement a 4th-order Runge–Kutta integrator for a planar two-body gravitational problem and verify physical invariants.\n\n## Physics\n\nReduced-mass / fixed-central-body form: a unit mass particle orbits a fixed point mass with gravitational parameter `mu > 0`:\n\n```\nr̈ = -mu * r / |r|³\n```\n\nState vector is 4D: `y = [x, y, vx, vy]`.\n\n## API (`orbit.py`)\n\n```python\ndef rk4_step(y: list[float], t: float, dt: float, mu: float) -> list[float]:\n    \"\"\"Advance state y by one RK4 step of size dt. Return new state as list of 4 floats.\"\"\"\n\ndef integrate_orbit(\n    y0: list[float],\n    t0: float,\n    t1: float,\n    dt: float,\n    mu: float,\n) -> list[list[float]]:\n    \"\"\"Integrate from t0 to t1 with fixed step dt using rk4_step.\n\n    Return the list of states at times t0, t0+dt, t0+2dt, ... including the\n    final state at (or just after reaching) t1. Use as many whole steps of dt\n    as needed; if (t1-t0) is not a multiple of dt, take a final partial step\n    of size rem = (t1-t0) % dt when rem > 1e-15.\n    \"\"\"\n\ndef specific_energy(y: list[float], mu: float) -> float:\n    \"\"\"E = |v|²/2 - mu/|r|.\"\"\"\n\ndef specific_angular_momentum_z(y: list[float]) -> float:\n    \"\"\"hz = x*vy - y*vx.\"\"\"\n```\n\n## Requirements\n\n1. Classic RK4 coefficients (k1..k4 with weights 1/6, 1/3, 1/3, 1/6).\n2. For a bound elliptical orbit integrated many periods with small `dt`, relative drift of energy and |hz| must stay tiny (tests use tight tolerances).\n3. One orbital period of `y0=[1,0,0,1]`, `mu=1` is `2*pi` (circular orbit, r=1, v=1).\n4. No network; pure numerics in `orbit.py`.\n\n## Notes\n\n- Use float math; avoid mutating the input list `y` in `rk4_step` (return a new list).\n- Guard against |r|==0 only if needed; tests never start at the origin.",
+  "language": "python",
+  "type": "algorithm",
+  "difficulty": "hard",
+  "test_cases": 9,
+  "expected_files": [
+    "orbit.py",
+    "test_orbit.py"
+  ],
+  "hidden_tests": [
+    {
+      "name": "test_energy_conservation_long",
+      "description": "Energy relative error over many periods"
+    },
+    {
+      "name": "test_period_return",
+      "description": "Circular orbit returns near start after 2π"
+    }
+  ],
+  "track": "algorithm"
+}

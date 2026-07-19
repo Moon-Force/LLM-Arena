@@ -1,0 +1,194 @@
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useArenaStore } from '@/stores/arena'
+
+const store = useArenaStore()
+const { t } = useI18n()
+const selectedModels = ref<string[]>([])
+const compareMetric = ref<'passRate' | 'hiddenPassRate' | 'stability' | 'overallScore'>('passRate')
+
+const metricLabels = computed(() => ({
+  passRate: t('leaderboard.table.passRate'),
+  hiddenPassRate: t('leaderboard.table.hidden'),
+  stability: t('leaderboard.table.stability'),
+  overallScore: t('leaderboard.table.score'),
+}))
+
+const selectedModelData = computed(() => {
+  return store.models.filter(m => selectedModels.value.includes(m.id))
+})
+
+/** Real metrics from completed runs only (no Math.random). */
+function metricFor(modelId: string, key: typeof compareMetric.value): number | null {
+  const entry = store.leaderboard.find(e => e.modelId === modelId)
+  if (!entry) return null
+  const v = entry[key]
+  return typeof v === 'number' && !Number.isNaN(v) ? v : null
+}
+
+function toggleModel(modelId: string) {
+  if (selectedModels.value.includes(modelId)) {
+    selectedModels.value = selectedModels.value.filter(id => id !== modelId)
+  } else if (selectedModels.value.length < 4) {
+    selectedModels.value.push(modelId)
+  }
+}
+
+function getBarWidth(value: number | null) {
+  if (value == null) return '0%'
+  return `${Math.min(Math.max(value, 0), 100)}%`
+}
+</script>
+
+<template>
+  <div class="min-h-screen py-16 md:py-20 px-5 md:px-8">
+    <div class="max-w-[1200px] mx-auto">
+      <div class="mb-12 max-w-2xl">
+        <div class="eyebrow mb-3">Head to head</div>
+        <h1 class="display-title text-4xl md:text-5xl mb-4">
+          <span class="gradient-text">{{ t('comparison.title') }}</span>
+        </h1>
+        <p class="text-[#9a9488] text-lg leading-relaxed">
+          {{ t('comparison.subtitle') }}
+        </p>
+      </div>
+
+      <div class="glass-card p-6 mb-8">
+        <h2 class="text-lg font-semibold mb-4">{{ t('comparison.selectModels') }}</h2>
+        <div class="flex flex-wrap gap-3">
+          <button
+            v-for="model in store.models"
+            :key="model.id"
+            type="button"
+            :class="[
+              'flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-200',
+              selectedModels.includes(model.id)
+                ? 'border-blue-500/50 bg-blue-500/10'
+                : 'border-kimi-border hover:border-kimi-border-hover bg-kimi-surface',
+            ]"
+            @click="toggleModel(model.id)"
+          >
+            <div
+              class="w-6 h-6 rounded-md flex items-center justify-center text-white text-xs font-bold"
+              :style="{ backgroundColor: model.color }"
+            >
+              {{ model.name.charAt(0) }}
+            </div>
+            <span class="text-sm font-medium">{{ model.name }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div v-if="selectedModels.length > 0" class="space-y-6">
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="(label, key) in metricLabels"
+            :key="key"
+            type="button"
+            :class="[
+              'px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200',
+              compareMetric === key
+                ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30'
+                : 'bg-kimi-surface text-kimi-muted border border-kimi-border hover:border-kimi-border-hover',
+            ]"
+            @click="compareMetric = key as typeof compareMetric"
+          >
+            {{ label }}
+          </button>
+        </div>
+
+        <div class="glass-card p-6">
+          <h3 class="text-lg font-semibold mb-2">{{ metricLabels[compareMetric] }}</h3>
+          <p class="text-xs text-kimi-muted mb-6">
+            Based on completed arena runs only (no simulated scores).
+          </p>
+          <div class="space-y-4">
+            <div
+              v-for="model in selectedModelData"
+              :key="model.id"
+              class="flex items-center gap-4"
+            >
+              <div class="w-32 flex-shrink-0 flex items-center gap-2">
+                <div
+                  class="w-6 h-6 rounded-md flex items-center justify-center text-white text-xs font-bold"
+                  :style="{ backgroundColor: model.color }"
+                >
+                  {{ model.name.charAt(0) }}
+                </div>
+                <span class="text-sm font-medium text-kimi-text">{{ model.name }}</span>
+              </div>
+              <div class="flex-1">
+                <div class="h-8 bg-kimi-surface rounded-lg overflow-hidden">
+                  <div
+                    class="h-full rounded-lg transition-all duration-500 flex items-center justify-end pr-3"
+                    :style="{
+                      width: getBarWidth(metricFor(model.id, compareMetric)),
+                      backgroundColor: model.color + '40',
+                      borderRight: `3px solid ${model.color}`,
+                    }"
+                  >
+                    <span class="text-xs font-medium text-kimi-text">
+                      {{
+                        metricFor(model.id, compareMetric) != null
+                          ? metricFor(model.id, compareMetric)!.toFixed(1) + '%'
+                          : 'n/a'
+                      }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card p-6">
+          <h3 class="text-lg font-semibold mb-6">{{ t('comparison.multiDimensional') }}</h3>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div
+              v-for="metric in (['passRate', 'hiddenPassRate', 'stability', 'overallScore'] as const)"
+              :key="metric"
+              class="p-4 rounded-xl bg-kimi-surface/50 border border-kimi-border/30"
+            >
+              <div class="text-xs text-kimi-muted mb-2">{{ metricLabels[metric] }}</div>
+              <div class="space-y-2">
+                <div
+                  v-for="model in selectedModelData"
+                  :key="model.id"
+                  class="flex items-center gap-2"
+                >
+                  <div
+                    class="w-2 h-2 rounded-full flex-shrink-0"
+                    :style="{ backgroundColor: model.color }"
+                  />
+                  <div class="flex-1">
+                    <div class="h-1.5 bg-kimi-surface rounded-full overflow-hidden">
+                      <div
+                        class="h-full rounded-full transition-all duration-500"
+                        :style="{
+                          width: getBarWidth(metricFor(model.id, metric)),
+                          backgroundColor: model.color,
+                        }"
+                      />
+                    </div>
+                  </div>
+                  <span class="text-xs text-kimi-muted w-10 text-right">
+                    {{
+                      metricFor(model.id, metric) != null
+                        ? metricFor(model.id, metric)!.toFixed(0)
+                        : '—'
+                    }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else class="text-center py-12">
+        <p class="text-kimi-muted">{{ t('comparison.selectModels') }}</p>
+      </div>
+    </div>
+  </div>
+</template>

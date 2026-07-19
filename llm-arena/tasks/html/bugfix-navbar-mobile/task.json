@@ -1,0 +1,20 @@
+{
+  "id": "bugfix-navbar-mobile",
+  "name": "Mobile Navbar Layout Fix",
+  "description": "Fix a responsive navbar bug (common frontend-agent rubric: fix mobile navbar without breaking desktop). File index.html has a header nav. On viewports <= 768px the menu should collapse behind a hamburger button id menu-toggle, and the link list id nav-links should be hidden by default then shown when body has class menu-open (toggle button toggles this class). Desktop (>768px) must show links in a horizontal row and hide the hamburger. Required: keep ids brand, menu-toggle, nav-links, and links Home/Product/Contact. Fix CSS/JS only as needed. When tests pass, FINISHED.",
+  "language": "html",
+  "type": "bugfix",
+  "difficulty": "medium",
+  "test_cases": 7,
+  "expected_files": [
+    "index.html"
+  ],
+  "hidden_tests": [
+    {
+      "name": "test_toggle_behavior",
+      "description": "menu-open class toggled by button"
+    }
+  ],
+  "source": "Inspired by frontend agent evals: fix mobile navbar layout (Frontman/DEV frontend coding agent rubrics).",
+  "track": "frontend"
+}

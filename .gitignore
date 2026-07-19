@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Python
+**/venv/
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/.mypy_cache/
+**/*.egg-info/
+
+# Secrets — never commit real keys
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Build / dist
+**/dist/
+**/coverage/
+**/.vite/
+*.tsbuildinfo
+**/.eslintcache
+
+# Logs & local data
+**/*.log
+**/logs/
+**/data/
+**/*.db
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/settings.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Local / temp
+*.local
+.claude/
+.codegraph/

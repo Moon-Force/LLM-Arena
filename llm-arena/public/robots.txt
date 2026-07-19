@@ -1,0 +1,10 @@
+# LLM Arena — allow public docs / UI crawl; no API probing required
+User-agent: *
+Allow: /
+
+# Prefer GitHub as canonical source for this open-source project
+Sitemap: https://github.com/Moon-Force/LLM-Arena
+
+# Disallow local API noise if the same origin ever proxies it
+Disallow: /api/
+Disallow: /health
